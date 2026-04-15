@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.3
-// @description  Auto video + mixed lessons + docs + quiz skip
+// @version      1.4
+// @description  Huawei auto: video + mixed lessons + docs + quiz skip + popup cancel
 // @match        https://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
 // @updateURL    https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
@@ -62,13 +62,30 @@
     document.body.appendChild(btn);
   }
 
+  function getNextBtn() {
+    return document.querySelector('.switch-btn .next, div.next');
+  }
+
+  function clickNext() {
+    const btn = getNextBtn();
+    if (!btn) {
+      log('Next button not found');
+      return false;
+    }
+
+    log('Click Next');
+    btn.click();
+    return true;
+  }
+
   function clickParentNext() {
     try {
-      const btn = window.parent.document.querySelector('div.next');
+      const btn = window.parent.document.querySelector('.switch-btn .next, div.next');
       if (!btn) {
         log('Parent Next button not found');
         return false;
       }
+
       log('Click parent Next');
       btn.click();
       return true;
@@ -78,41 +95,55 @@
     }
   }
 
-  function clickLocalNext() {
-    const btn = document.querySelector('div.next');
-    if (!btn) {
-      log('Local Next button not found');
-      return false;
+  function handleHuaweiPopup() {
+    const modal = document.querySelector('.kltCourse-modal-content');
+    if (!modal) return false;
+
+    const cancelBtn = [...modal.querySelectorAll('button')]
+      .find(btn => (btn.innerText || '').trim().toLowerCase() === 'cancels');
+
+    if (cancelBtn) {
+      log('Click CANCEL (80% popup)');
+      cancelBtn.click();
+      return true;
     }
-    log('Click local Next');
-    btn.click();
+
+    return false;
+  }
+
+  function isQuizPage() {
+    const startBtn = [...document.querySelectorAll('button, div, span, a')]
+      .find(el => (el.innerText || '').trim().toLowerCase() === 'start quiz');
+
+    const pageTitle = [...document.querySelectorAll('h1, h2, h3, div, span')]
+      .some(el => (el.innerText || '').trim().toLowerCase() === 'quiz');
+
+    return !!(startBtn && pageTitle);
+  }
+
+  function processQuiz() {
+    if (!isQuizPage()) return false;
+
+    const key = 'quiz:' + location.href;
+    if (lastKey === key) return true;
+    lastKey = key;
+
+    log('Quiz detected -> skipping');
+    setTimeout(() => {
+      clickNext();
+    }, 1000);
+
     return true;
   }
 
-  function getNextBtn() {
-    return document.querySelector('.switch-btn .next, div.next');
+  function getPureVideoElement() {
+    return document.querySelector('.courseware-wrapper.mult-video video, video.vjs-tech, video[id*="_html5_api"], video');
   }
 
-  function clickNext() {
-    const nextBtn = getNextBtn();
-    if (!nextBtn) {
-      log('Next button not found');
-      return false;
-    }
-
-    log('Click Next');
-    nextBtn.click();
-    return true;
-  }
-
-  function hasVideoBlock() {
-    return !!document.querySelector('.courseware-wrapper.mult-video video, video');
-  }
-
-  function hasGraphicBlock() {
-    return !!document.querySelector(
-      '.courseware-wrapper.mult-graphic, .graphic-content, .content-style-html, #innerContent'
-    );
+  function hasMixedLesson() {
+    const hasVideo = !!document.querySelector('.courseware-wrapper.mult-video video');
+    const hasGraphic = !!document.querySelector('.courseware-wrapper.mult-graphic');
+    return hasVideo && hasGraphic;
   }
 
   function finishAllVideos() {
@@ -123,7 +154,7 @@
 
     for (const v of videos) {
       try {
-        v.play?.();
+        v.play?.().catch?.(() => {});
 
         if (Number.isFinite(v.duration) && v.duration > 1) {
           if (v.currentTime < v.duration - 0.5) {
@@ -145,130 +176,85 @@
     return allDone;
   }
 
-  function scrollLessonToBottom() {
-    const inner = document.querySelector('#innerContent');
-    if (inner) {
-      const before = inner.scrollTop;
-      inner.scrollTop = inner.scrollHeight;
-      const after = inner.scrollTop;
-      log('Scroll #innerContent:', before, '->', after);
-      return after > before;
-    }
-
-    const graphicScrollable = document.querySelector('.graphic-content, .content-style-html');
-    if (graphicScrollable) {
-      const before = graphicScrollable.scrollTop || 0;
-      graphicScrollable.scrollTop = graphicScrollable.scrollHeight;
-      const after = graphicScrollable.scrollTop || 0;
-      log('Scroll graphic block:', before, '->', after);
-      return after > before;
-    }
-
-    window.scrollTo(0, document.documentElement.scrollHeight);
-    log('Fallback scroll window');
-    return true;
-  }
-
-  function isScrolledToBottom() {
-    const inner = document.querySelector('#innerContent');
-    if (inner) {
-      const maxScroll = inner.scrollHeight - inner.clientHeight;
-      const done = maxScroll <= 5 || inner.scrollTop >= maxScroll - 10;
-      log('#innerContent bottom check:', {
-        scrollTop: inner.scrollTop,
-        maxScroll,
-        done
-      });
-      return done;
-    }
-
-    const graphicScrollable = document.querySelector('.graphic-content, .content-style-html');
-    if (graphicScrollable) {
-      const maxScroll = graphicScrollable.scrollHeight - graphicScrollable.clientHeight;
-      const done = maxScroll <= 5 || graphicScrollable.scrollTop >= maxScroll - 10;
-      log('graphic block bottom check:', {
-        scrollTop: graphicScrollable.scrollTop,
-        maxScroll,
-        done
-      });
-      return done;
-    }
-
-    return false;
-  }
-
-  function processMixedLesson() {
-    const hasVideo = hasVideoBlock();
-    const hasGraphic = hasGraphicBlock();
-
-    if (!hasVideo && !hasGraphic) return false;
-
-    if (hasVideo) {
-      const videoDone = finishAllVideos();
-      if (!videoDone) {
-        log('Processing VIDEO part');
-        return true;
-      }
-    }
-
-    if (hasGraphic) {
-      const atBottom = isScrolledToBottom();
-
-      if (!atBottom) {
-        log('Scrolling GRAPHIC/TEXT part');
-        scrollLessonToBottom();
-        return true;
-      }
-    }
-
-    const mixedKey = 'mixed:' + location.href;
-    if (lastKey === mixedKey) return true;
-    lastKey = mixedKey;
-
-    log('Mixed lesson complete -> Next');
-    clickNext();
-    return true;
-  }
-
-  function isQuizPage() {
-    const text = document.body.innerText.toLowerCase();
-
+  function getMixedScrollContainer() {
     return (
-      text.includes('quiz') &&
-      (
-        text.includes('start quiz') ||
-        text.includes('passing score') ||
-        text.includes('my score') ||
-        text.includes('number of tests')
-      )
+      document.querySelector('#innerContent.learn-content-main-overflow') ||
+      document.querySelector('.courseware-wrapper.mult-graphic .graphic-content') ||
+      document.querySelector('.courseware-wrapper.mult-graphic .content-style-html')
     );
   }
 
-  function processQuiz() {
-    if (!isQuizPage()) return false;
+  function scrollLessonToBottom() {
+    const container = getMixedScrollContainer();
+    if (!container) {
+      log('No mixed scroll container found');
+      return false;
+    }
 
-    log('Quiz detected -> skipping');
+    const before = container.scrollTop || 0;
+    container.scrollTop = container.scrollHeight;
+    const after = container.scrollTop || 0;
 
-    const key = 'quiz:' + location.href;
-    if (lastKey === key) return true;
-    lastKey = key;
+    log('Scroll mixed lesson:', before, '->', after);
+    return after > before || (container.scrollHeight - container.clientHeight <= 5);
+  }
 
+  function isScrolledToBottom() {
+    const container = getMixedScrollContainer();
+    if (!container) return false;
+
+    const maxScroll = container.scrollHeight - container.clientHeight;
+    const done = maxScroll <= 5 || container.scrollTop >= maxScroll - 10;
+
+    log('Mixed bottom check:', {
+      scrollTop: container.scrollTop,
+      maxScroll,
+      done
+    });
+
+    return done;
+  }
+
+  function processMixedLesson() {
+    if (!hasMixedLesson()) return false;
+
+    const keyBase = 'mixed:' + location.href;
+
+    const videoDone = finishAllVideos();
+    if (!videoDone) {
+      log('Processing mixed VIDEO part');
+      return true;
+    }
+
+    const atBottom = isScrolledToBottom();
+    if (!atBottom) {
+      log('Processing mixed TEXT part');
+      scrollLessonToBottom();
+      return true;
+    }
+
+    if (lastKey === keyBase) return true;
+    lastKey = keyBase;
+
+    log('Mixed lesson complete -> Next');
     setTimeout(() => {
       clickNext();
-    }, 1000);
+    }, 800);
 
     return true;
   }
 
   async function handleVideoPage() {
-    const video = document.querySelector('video.vjs-tech, video[id*="_html5_api"], video');
+    if (hasMixedLesson()) return;
+
+    const video = getPureVideoElement();
     if (!video) return;
 
     const key =
       'video:' +
       (video.getAttribute('data-key') || video.currentSrc || video.src || video.id || 'unknown');
 
-    if (key === lastKey) return;
+    if (lastKey === key) return;
     lastKey = key;
 
     log('Processing VIDEO lesson');
@@ -278,7 +264,7 @@
       await sleep(VIDEO_DELAY);
 
       try {
-        video.play().catch(() => {});
+        video.play?.().catch?.(() => {});
         video.currentTime = Math.max(0, video.duration - END_OFFSET);
         video.dispatchEvent(new Event('timeupdate', { bubbles: true }));
         video.dispatchEvent(new Event('seeking', { bubbles: true }));
@@ -291,10 +277,10 @@
       }
 
       await sleep(NEXT_DELAY);
-      clickLocalNext();
+      clickNext();
     };
 
-    if (video.readyState >= 1 && video.duration > 0) {
+    if (video.readyState >= 1 && Number.isFinite(video.duration) && video.duration > 0) {
       run();
     } else {
       video.addEventListener('loadedmetadata', run, { once: true });
@@ -308,16 +294,12 @@
   }
 
   function getTotalPages() {
-    const spans = [...document.querySelectorAll('span')];
-    for (const s of spans) {
-      const txt = (s.innerText || s.textContent || '').replace(/\s+/g, ' ').trim();
-      const m = txt.match(/(\d+)\s*\/\s*(\d+)/);
-      if (m) {
-        const total = Number(m[2]);
-        if (Number.isFinite(total)) return total;
-      }
-    }
-    return null;
+    const text = document.body.innerText || '';
+    const m = text.match(/(\d+)\s*\/\s*(\d+)/);
+    if (!m) return null;
+
+    const total = Number(m[2]);
+    return Number.isFinite(total) ? total : null;
   }
 
   function getDocNextBtn() {
@@ -328,22 +310,6 @@
     return document.querySelector('img.footer-icon[src*="toRight3."]');
   }
 
-  function handleHuaweiPopup() {
-    const modal = document.querySelector('.kltCourse-modal-content');
-    if (!modal) return false;
-
-    const cancelBtn = [...modal.querySelectorAll('button')]
-      .find(btn => btn.innerText.trim().toLowerCase() === 'cancels');
-
-    if (cancelBtn) {
-      log('Click CANCEL (80% popup)');
-      cancelBtn.click();
-      return true;
-    }
-
-    return false;
-  }
-
   async function handleDocPage() {
     const pagerExists = !!document.querySelector('#pageNumInput, i.clickStyle, img.footer-icon');
     if (!pagerExists) return;
@@ -352,7 +318,7 @@
     const total = getTotalPages();
     const key = `doc:${location.href}|${current}|${total}`;
 
-    if (key === lastKey) return;
+    if (lastKey === key) return;
     lastKey = key;
 
     log('Processing DOCUMENT lesson', { current, total });
@@ -389,12 +355,11 @@
     try {
       const path = location.pathname;
 
-      if (path.includes('/application-learn')) {
-        handleHuaweiPopup();
+      handleHuaweiPopup();
 
+      if (path.includes('/application-learn')) {
         if (processQuiz()) return;
         if (processMixedLesson()) return;
-
         await handleVideoPage();
         return;
       }
@@ -413,7 +378,6 @@
     createToggleButton();
 
     setInterval(() => {
-      handleHuaweiPopup();
       process();
     }, LOOP_MS);
 
