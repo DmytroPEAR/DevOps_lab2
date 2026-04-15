@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.8
+// @version      1.9
 // @description  Huawei course auto FIXED
 // @match        https://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
