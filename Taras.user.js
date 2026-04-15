@@ -1,14 +1,11 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.2
-// @description  Auto video + doc
+// @version      1.3
+// @description  Auto video + mixed lessons + docs + quiz skip
 // @match        https://talent.shixizhi.huawei.com/*
-
-//
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
 // @updateURL    https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
-
 // @grant        none
 // ==/UserScript==
 
@@ -92,134 +89,177 @@
     return true;
   }
 
-function getNextBtn() {
-  return document.querySelector('.switch-btn .next, div.next');
-}
+  function getNextBtn() {
+    return document.querySelector('.switch-btn .next, div.next');
+  }
 
-function clickNext() {
-  const nextBtn = getNextBtn();
-  if (!nextBtn) return false;
+  function clickNext() {
+    const nextBtn = getNextBtn();
+    if (!nextBtn) {
+      log('Next button not found');
+      return false;
+    }
 
-  console.log('[Huawei Auto] Click Next');
-  nextBtn.click();
-  return true;
-}
+    log('Click Next');
+    nextBtn.click();
+    return true;
+  }
 
-function hasVideoBlock() {
-  return !!document.querySelector('.courseware-wrapper.mult-video video, video');
-}
+  function hasVideoBlock() {
+    return !!document.querySelector('.courseware-wrapper.mult-video video, video');
+  }
 
-function hasGraphicBlock() {
-  return !!document.querySelector('.courseware-wrapper.mult-graphic, .graphic-content, .content-style-html');
-}
+  function hasGraphicBlock() {
+    return !!document.querySelector(
+      '.courseware-wrapper.mult-graphic, .graphic-content, .content-style-html, #innerContent'
+    );
+  }
 
-function finishAllVideos() {
-  const videos = [...document.querySelectorAll('.courseware-wrapper.mult-video video, video')];
-  if (!videos.length) return true;
+  function finishAllVideos() {
+    const videos = [...document.querySelectorAll('.courseware-wrapper.mult-video video, video')];
+    if (!videos.length) return true;
 
-  let allDone = true;
+    let allDone = true;
 
-  for (const v of videos) {
-    try {
-      v.play?.();
-      if (Number.isFinite(v.duration) && v.duration > 1) {
-        if (v.currentTime < v.duration - 0.5) {
-          v.currentTime = Math.max(0, v.duration - 0.3);
+    for (const v of videos) {
+      try {
+        v.play?.();
+
+        if (Number.isFinite(v.duration) && v.duration > 1) {
+          if (v.currentTime < v.duration - 0.5) {
+            v.currentTime = Math.max(0, v.duration - END_OFFSET);
+            v.dispatchEvent(new Event('timeupdate', { bubbles: true }));
+            v.dispatchEvent(new Event('seeking', { bubbles: true }));
+            v.dispatchEvent(new Event('seeked', { bubbles: true }));
+            v.dispatchEvent(new Event('ended', { bubbles: true }));
+            allDone = false;
+          }
+        } else {
           allDone = false;
         }
-      } else {
+      } catch (e) {
         allDone = false;
       }
-    } catch (e) {
-      allDone = false;
     }
+
+    return allDone;
   }
 
-  return allDone;
-}
+  function scrollLessonToBottom() {
+    const inner = document.querySelector('#innerContent');
+    if (inner) {
+      const before = inner.scrollTop;
+      inner.scrollTop = inner.scrollHeight;
+      const after = inner.scrollTop;
+      log('Scroll #innerContent:', before, '->', after);
+      return after > before;
+    }
 
-function scrollLessonToBottom() {
-  const candidates = [
-    document.querySelector('.learn-content-main.main-outer'),
-    document.querySelector('.video-content'),
-    document.querySelector('.graphic-content'),
-    document.querySelector('.content-style-html'),
-    document.querySelector('#innerContent'),
-    document.scrollingElement,
-    document.documentElement,
-    document.body
-  ].filter(Boolean);
+    const graphicScrollable = document.querySelector('.graphic-content, .content-style-html');
+    if (graphicScrollable) {
+      const before = graphicScrollable.scrollTop || 0;
+      graphicScrollable.scrollTop = graphicScrollable.scrollHeight;
+      const after = graphicScrollable.scrollTop || 0;
+      log('Scroll graphic block:', before, '->', after);
+      return after > before;
+    }
 
-  let moved = false;
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    log('Fallback scroll window');
+    return true;
+  }
 
-  for (const el of candidates) {
-    try {
-      const before = el.scrollTop || window.pageYOffset || 0;
+  function isScrolledToBottom() {
+    const inner = document.querySelector('#innerContent');
+    if (inner) {
+      const maxScroll = inner.scrollHeight - inner.clientHeight;
+      const done = maxScroll <= 5 || inner.scrollTop >= maxScroll - 10;
+      log('#innerContent bottom check:', {
+        scrollTop: inner.scrollTop,
+        maxScroll,
+        done
+      });
+      return done;
+    }
 
-      if (el === document.body || el === document.documentElement || el === document.scrollingElement) {
-        window.scrollTo(0, document.documentElement.scrollHeight);
-      } else {
-        el.scrollTop = el.scrollHeight;
+    const graphicScrollable = document.querySelector('.graphic-content, .content-style-html');
+    if (graphicScrollable) {
+      const maxScroll = graphicScrollable.scrollHeight - graphicScrollable.clientHeight;
+      const done = maxScroll <= 5 || graphicScrollable.scrollTop >= maxScroll - 10;
+      log('graphic block bottom check:', {
+        scrollTop: graphicScrollable.scrollTop,
+        maxScroll,
+        done
+      });
+      return done;
+    }
+
+    return false;
+  }
+
+  function processMixedLesson() {
+    const hasVideo = hasVideoBlock();
+    const hasGraphic = hasGraphicBlock();
+
+    if (!hasVideo && !hasGraphic) return false;
+
+    if (hasVideo) {
+      const videoDone = finishAllVideos();
+      if (!videoDone) {
+        log('Processing VIDEO part');
+        return true;
       }
-
-      const after = el.scrollTop || window.pageYOffset || 0;
-      if (after > before) moved = true;
-    } catch (e) {}
-  }
-
-  return moved;
-}
-
-function isScrolledToBottom() {
-  const docBottom =
-    window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 20;
-
-  const htmlBlock = document.querySelector('.content-style-html');
-  const graphicBlock = document.querySelector('.graphic-content');
-  const innerContent = document.querySelector('#innerContent');
-
-  const blocks = [htmlBlock, graphicBlock, innerContent].filter(Boolean);
-
-  const blockBottom = blocks.every(el => {
-    const maxScroll = el.scrollHeight - el.clientHeight;
-    return maxScroll <= 5 || el.scrollTop >= maxScroll - 10;
-  });
-
-  return docBottom || blockBottom;
-}
-function processMixedLesson() {
-  const hasVideo = hasVideoBlock();
-  const hasGraphic = hasGraphicBlock();
-
-  if (!hasVideo && !hasGraphic) return false;
-
-  if (hasVideo) {
-    const videoDone = finishAllVideos();
-    if (!videoDone) {
-      console.log('[Huawei Auto] Processing VIDEO part');
-      return true;
     }
-  }
 
-  if (hasGraphic) {
-    const atBottom = isScrolledToBottom();
+    if (hasGraphic) {
+      const atBottom = isScrolledToBottom();
 
-    if (!atBottom) {
-      console.log('[Huawei Auto] Scrolling GRAPHIC/TEXT part');
-      scrollLessonToBottom();
-      return true;
+      if (!atBottom) {
+        log('Scrolling GRAPHIC/TEXT part');
+        scrollLessonToBottom();
+        return true;
+      }
     }
+
+    const mixedKey = 'mixed:' + location.href;
+    if (lastKey === mixedKey) return true;
+    lastKey = mixedKey;
+
+    log('Mixed lesson complete -> Next');
+    clickNext();
+    return true;
   }
 
-  const mixedKey = 'mixed:' + location.href;
-if (lastKey === mixedKey) return true;
-lastKey = mixedKey;
+  function isQuizPage() {
+    const text = document.body.innerText.toLowerCase();
 
-console.log('[Huawei Auto] Mixed lesson complete -> Next');
-clickNext();
-return true;
-}
-  
+    return (
+      text.includes('quiz') &&
+      (
+        text.includes('start quiz') ||
+        text.includes('passing score') ||
+        text.includes('my score') ||
+        text.includes('number of tests')
+      )
+    );
+  }
+
+  function processQuiz() {
+    if (!isQuizPage()) return false;
+
+    log('Quiz detected -> skipping');
+
+    const key = 'quiz:' + location.href;
+    if (lastKey === key) return true;
+    lastKey = key;
+
+    setTimeout(() => {
+      clickNext();
+    }, 1000);
+
+    return true;
+  }
+
   async function handleVideoPage() {
     const video = document.querySelector('video.vjs-tech, video[id*="_html5_api"], video');
     if (!video) return;
@@ -287,22 +327,22 @@ return true;
   function getDocLastBtn() {
     return document.querySelector('img.footer-icon[src*="toRight3."]');
   }
+
   function handleHuaweiPopup() {
-  const modal = document.querySelector('.kltCourse-modal-content');
+    const modal = document.querySelector('.kltCourse-modal-content');
+    if (!modal) return false;
 
-  if (!modal) return false;
+    const cancelBtn = [...modal.querySelectorAll('button')]
+      .find(btn => btn.innerText.trim().toLowerCase() === 'cancels');
 
-  const cancelBtn = [...modal.querySelectorAll('button')]
-    .find(btn => btn.innerText.trim().toLowerCase() === 'cancels');
+    if (cancelBtn) {
+      log('Click CANCEL (80% popup)');
+      cancelBtn.click();
+      return true;
+    }
 
-  if (cancelBtn) {
-    console.log('[Huawei Auto] Click CANCEL (80% popup)');
-    cancelBtn.click();
-    return true;
+    return false;
   }
-
-  return false;
-}
 
   async function handleDocPage() {
     const pagerExists = !!document.querySelector('#pageNumInput, i.clickStyle, img.footer-icon');
@@ -343,36 +383,37 @@ return true;
   }
 
   async function process() {
-  if (!enabled || busy) return;
-  busy = true;
+    if (!enabled || busy) return;
+    busy = true;
 
-  try {
-    const path = location.pathname;
+    try {
+      const path = location.pathname;
 
-    if (path.includes('/application-learn')) {
-      handleHuaweiPopup();
+      if (path.includes('/application-learn')) {
+        handleHuaweiPopup();
 
-      if (processMixedLesson()) return;
+        if (processQuiz()) return;
+        if (processMixedLesson()) return;
 
-      await handleVideoPage();
-      return;
+        await handleVideoPage();
+        return;
+      }
+
+      if (path.includes('/edm3client/static/index.html')) {
+        await handleDocPage();
+        return;
+      }
+    } finally {
+      busy = false;
     }
-
-    if (path.includes('/edm3client/static/index.html')) {
-      await handleDocPage();
-      return;
-    }
-  } finally {
-    busy = false;
   }
-}
 
   function init() {
     log('Script started on:', location.href);
     createToggleButton();
 
     setInterval(() => {
-      handleHuaweiPopup(); 
+      handleHuaweiPopup();
       process();
     }, LOOP_MS);
 
