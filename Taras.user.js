@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.0
+// @version      1.1
 // @description  Auto video + doc
 // @match        https://talent.shixizhi.huawei.com/*
 
