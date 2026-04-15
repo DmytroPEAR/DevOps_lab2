@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Local
+// @name         Taras
 // @namespace    local
 // @version      2.2
 // @description  Huawei course auto (Iframe Next Button Fix)
