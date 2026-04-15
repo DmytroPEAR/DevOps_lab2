@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.1
+// @version      1.2
 // @description  Auto video + doc
 // @match        https://talent.shixizhi.huawei.com/*
 
@@ -92,6 +92,134 @@
     return true;
   }
 
+function getNextBtn() {
+  return document.querySelector('.switch-btn .next, div.next');
+}
+
+function clickNext() {
+  const nextBtn = getNextBtn();
+  if (!nextBtn) return false;
+
+  console.log('[Huawei Auto] Click Next');
+  nextBtn.click();
+  return true;
+}
+
+function hasVideoBlock() {
+  return !!document.querySelector('.courseware-wrapper.mult-video video, video');
+}
+
+function hasGraphicBlock() {
+  return !!document.querySelector('.courseware-wrapper.mult-graphic, .graphic-content, .content-style-html');
+}
+
+function finishAllVideos() {
+  const videos = [...document.querySelectorAll('.courseware-wrapper.mult-video video, video')];
+  if (!videos.length) return true;
+
+  let allDone = true;
+
+  for (const v of videos) {
+    try {
+      v.play?.();
+      if (Number.isFinite(v.duration) && v.duration > 1) {
+        if (v.currentTime < v.duration - 0.5) {
+          v.currentTime = Math.max(0, v.duration - 0.3);
+          allDone = false;
+        }
+      } else {
+        allDone = false;
+      }
+    } catch (e) {
+      allDone = false;
+    }
+  }
+
+  return allDone;
+}
+
+function scrollLessonToBottom() {
+  const candidates = [
+    document.querySelector('.learn-content-main.main-outer'),
+    document.querySelector('.video-content'),
+    document.querySelector('.graphic-content'),
+    document.querySelector('.content-style-html'),
+    document.querySelector('#innerContent'),
+    document.scrollingElement,
+    document.documentElement,
+    document.body
+  ].filter(Boolean);
+
+  let moved = false;
+
+  for (const el of candidates) {
+    try {
+      const before = el.scrollTop || window.pageYOffset || 0;
+
+      if (el === document.body || el === document.documentElement || el === document.scrollingElement) {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
+
+      const after = el.scrollTop || window.pageYOffset || 0;
+      if (after > before) moved = true;
+    } catch (e) {}
+  }
+
+  return moved;
+}
+
+function isScrolledToBottom() {
+  const docBottom =
+    window.innerHeight + window.pageYOffset >= document.documentElement.scrollHeight - 20;
+
+  const htmlBlock = document.querySelector('.content-style-html');
+  const graphicBlock = document.querySelector('.graphic-content');
+  const innerContent = document.querySelector('#innerContent');
+
+  const blocks = [htmlBlock, graphicBlock, innerContent].filter(Boolean);
+
+  const blockBottom = blocks.every(el => {
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    return maxScroll <= 5 || el.scrollTop >= maxScroll - 10;
+  });
+
+  return docBottom || blockBottom;
+}
+function processMixedLesson() {
+  const hasVideo = hasVideoBlock();
+  const hasGraphic = hasGraphicBlock();
+
+  if (!hasVideo && !hasGraphic) return false;
+
+  if (hasVideo) {
+    const videoDone = finishAllVideos();
+    if (!videoDone) {
+      console.log('[Huawei Auto] Processing VIDEO part');
+      return true;
+    }
+  }
+
+  if (hasGraphic) {
+    const atBottom = isScrolledToBottom();
+
+    if (!atBottom) {
+      console.log('[Huawei Auto] Scrolling GRAPHIC/TEXT part');
+      scrollLessonToBottom();
+      return true;
+    }
+  }
+
+  const mixedKey = 'mixed:' + location.href;
+if (lastKey === mixedKey) return true;
+lastKey = mixedKey;
+
+console.log('[Huawei Auto] Mixed lesson complete -> Next');
+clickNext();
+return true;
+}
+  
   async function handleVideoPage() {
     const video = document.querySelector('video.vjs-tech, video[id*="_html5_api"], video');
     if (!video) return;
@@ -215,25 +343,29 @@
   }
 
   async function process() {
-    if (!enabled || busy) return;
-    busy = true;
+  if (!enabled || busy) return;
+  busy = true;
 
-    try {
-      const path = location.pathname;
+  try {
+    const path = location.pathname;
 
-      if (path.includes('/application-learn')) {
-        await handleVideoPage();
-        return;
-      }
+    if (path.includes('/application-learn')) {
+      handleHuaweiPopup();
 
-      if (path.includes('/edm3client/static/index.html')) {
-        await handleDocPage();
-        return;
-      }
-    } finally {
-      busy = false;
+      if (processMixedLesson()) return;
+
+      await handleVideoPage();
+      return;
     }
+
+    if (path.includes('/edm3client/static/index.html')) {
+      await handleDocPage();
+      return;
+    }
+  } finally {
+    busy = false;
   }
+}
 
   function init() {
     log('Script started on:', location.href);
