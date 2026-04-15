@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.5
-// @description  Huawei auto: video + mixed lessons + docs + quiz skip + popup cancel
+// @version      1.6
+// @description  Huawei auto: video + mixed + text + docs + quiz skip + popup cancel
 // @match        https://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
 // @updateURL    https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
@@ -17,6 +17,7 @@
   const VIDEO_DELAY = 1200;
   const DOC_DELAY = 1200;
   const NEXT_DELAY = 1600;
+  const TEXT_WAIT_MS = 3000;
   const LOOP_MS = 1500;
 
   let enabled = true;
@@ -115,10 +116,10 @@
     const startBtn = [...document.querySelectorAll('button, div, span, a')]
       .find(el => (el.innerText || '').trim().toLowerCase() === 'start quiz');
 
-    const pageTitle = [...document.querySelectorAll('h1, h2, h3, div, span')]
-      .some(el => (el.innerText || '').trim().toLowerCase() === 'quiz');
+    const mainQuizTitle = [...document.querySelectorAll('h1, h2, h3, div, span')]
+      .find(el => (el.innerText || '').trim().toLowerCase() === 'quiz');
 
-    return !!(startBtn && pageTitle);
+    return !!(startBtn && mainQuizTitle);
   }
 
   function processQuiz() {
@@ -136,6 +137,10 @@
     return true;
   }
 
+  function hasDocIframeOnLessonPage() {
+    return !!document.querySelector('iframe#edmPage, iframe[src*="/edm3client/static/index.html"]');
+  }
+
   function getPureVideoElement() {
     return document.querySelector('.courseware-wrapper.mult-video video, video.vjs-tech, video[id*="_html5_api"], video');
   }
@@ -146,6 +151,14 @@
     return hasVideo && hasGraphic;
   }
 
+  function hasTextOnlyLesson() {
+    const hasVideo = !!document.querySelector('.courseware-wrapper.mult-video video');
+    const hasGraphic = !!document.querySelector('.courseware-wrapper.mult-graphic');
+    const hasDocIframe = hasDocIframeOnLessonPage();
+
+    return !hasVideo && hasGraphic && !hasDocIframe;
+  }
+
   function finishAllVideos() {
     const videos = [...document.querySelectorAll('.courseware-wrapper.mult-video video, video')];
     if (!videos.length) return true;
@@ -154,7 +167,10 @@
 
     for (const v of videos) {
       try {
-        v.play?.().catch?.(() => {});
+        if (typeof v.play === 'function') {
+          const p = v.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
 
         if (Number.isFinite(v.duration) && v.duration > 1) {
           if (v.currentTime < v.duration - 0.5) {
@@ -184,29 +200,25 @@
     );
   }
 
-  function scrollLessonToBottom() {
-    const container = getMixedScrollContainer();
-    if (!container) {
-      log('No mixed scroll container found');
-      return false;
-    }
+  function scrollContainerToBottom(container) {
+    if (!container) return false;
 
     const before = container.scrollTop || 0;
     container.scrollTop = container.scrollHeight;
     const after = container.scrollTop || 0;
 
-    log('Scroll mixed lesson:', before, '->', after);
+    log('Scroll:', before, '->', after, '| max:', container.scrollHeight - container.clientHeight);
+
     return after > before || (container.scrollHeight - container.clientHeight <= 5);
   }
 
-  function isScrolledToBottom() {
-    const container = getMixedScrollContainer();
+  function isContainerAtBottom(container) {
     if (!container) return false;
 
     const maxScroll = container.scrollHeight - container.clientHeight;
     const done = maxScroll <= 5 || container.scrollTop >= maxScroll - 10;
 
-    log('Mixed bottom check:', {
+    log('Bottom check:', {
       scrollTop: container.scrollTop,
       maxScroll,
       done
@@ -216,44 +228,84 @@
   }
 
   function processMixedLesson() {
-  if (!hasMixedLesson()) return false;
+    if (!hasMixedLesson()) return false;
 
-  const doneKey = 'mixed-done:' + location.href;
-  const waitKey = 'mixed-wait:' + location.href;
+    const doneKey = 'mixed-done:' + location.href;
+    const waitingKey = 'mixed-wait:' + location.href;
 
-  const videoDone = finishAllVideos();
-  if (!videoDone) {
-    log('Processing mixed VIDEO part');
+    const videoDone = finishAllVideos();
+    if (!videoDone) {
+      log('Processing mixed VIDEO part');
+      return true;
+    }
+
+    const container = getMixedScrollContainer();
+    if (!container) {
+      log('Mixed lesson scroll container not found');
+      return false;
+    }
+
+    const atBottom = isContainerAtBottom(container);
+    if (!atBottom) {
+      log('Processing mixed TEXT part');
+      scrollContainerToBottom(container);
+      lastKey = waitingKey;
+      return true;
+    }
+
+    if (lastKey === doneKey) return true;
+
+    if (lastKey === waitingKey) {
+      lastKey = doneKey;
+      log(`Mixed lesson complete -> wait ${TEXT_WAIT_MS} ms -> Next`);
+      setTimeout(() => {
+        clickNext();
+      }, TEXT_WAIT_MS);
+      return true;
+    }
+
+    lastKey = waitingKey;
     return true;
   }
 
-  const atBottom = isScrolledToBottom();
-  if (!atBottom) {
-    log('Processing mixed TEXT part');
-    scrollLessonToBottom();
-    lastKey = waitKey;
+  function processTextOnlyLesson() {
+    if (!hasTextOnlyLesson()) return false;
+
+    const waitingKey = 'textonly-wait:' + location.href;
+    const doneKey = 'textonly-done:' + location.href;
+
+    const container = getMixedScrollContainer();
+    if (!container) {
+      log('Text-only container not found');
+      return false;
+    }
+
+    const atBottom = isContainerAtBottom(container);
+    if (!atBottom) {
+      log('Scrolling TEXT-only lesson');
+      scrollContainerToBottom(container);
+      lastKey = waitingKey;
+      return true;
+    }
+
+    if (lastKey === doneKey) return true;
+
+    if (lastKey === waitingKey) {
+      lastKey = doneKey;
+      log(`Text-only lesson complete -> wait ${TEXT_WAIT_MS} ms -> Next`);
+      setTimeout(() => {
+        clickNext();
+      }, TEXT_WAIT_MS);
+      return true;
+    }
+
+    lastKey = waitingKey;
     return true;
   }
-
-  if (lastKey === doneKey) return true;
-
-  if (lastKey === waitKey) {
-    lastKey = doneKey;
-    log('Mixed lesson complete -> wait 3 sec -> Next');
-
-    setTimeout(() => {
-      clickNext();
-    }, 3000);
-
-    return true;
-  }
-
-  lastKey = waitKey;
-  return true;
-}
 
   async function handleVideoPage() {
     if (hasMixedLesson()) return;
+    if (hasDocIframeOnLessonPage()) return;
 
     const video = getPureVideoElement();
     if (!video) return;
@@ -272,12 +324,17 @@
       await sleep(VIDEO_DELAY);
 
       try {
-        video.play?.().catch?.(() => {});
+        if (typeof video.play === 'function') {
+          const p = video.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
+
         video.currentTime = Math.max(0, video.duration - END_OFFSET);
         video.dispatchEvent(new Event('timeupdate', { bubbles: true }));
         video.dispatchEvent(new Event('seeking', { bubbles: true }));
         video.dispatchEvent(new Event('seeked', { bubbles: true }));
         video.dispatchEvent(new Event('ended', { bubbles: true }));
+
         log(`Video skipped to end: ${video.currentTime}/${video.duration}`);
       } catch (e) {
         log('Video skip error:', e);
@@ -303,10 +360,10 @@
 
   function getTotalPages() {
     const text = document.body.innerText || '';
-    const m = text.match(/(\d+)\s*\/\s*(\d+)/);
-    if (!m) return null;
+    const match = text.match(/(\d+)\s*\/\s*(\d+)/);
+    if (!match) return null;
 
-    const total = Number(m[2]);
+    const total = Number(match[2]);
     return Number.isFinite(total) ? total : null;
   }
 
@@ -361,13 +418,22 @@
     busy = true;
 
     try {
-      const path = location.pathname;
-
       handleHuaweiPopup();
+
+      const path = location.pathname;
 
       if (path.includes('/application-learn')) {
         if (processQuiz()) return;
+
+        // якщо це урок з iframe document/pdf/book — не чіпаємо його тут
+        if (hasDocIframeOnLessonPage()) {
+          log('Document iframe lesson detected on parent page -> waiting for iframe handler');
+          return;
+        }
+
         if (processMixedLesson()) return;
+        if (processTextOnlyLesson()) return;
+
         await handleVideoPage();
         return;
       }
