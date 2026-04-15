@@ -159,6 +159,22 @@
   function getDocLastBtn() {
     return document.querySelector('img.footer-icon[src*="toRight3."]');
   }
+  function handleHuaweiPopup() {
+  const modal = document.querySelector('.kltCourse-modal-content');
+
+  if (!modal) return false;
+
+  const cancelBtn = [...modal.querySelectorAll('button')]
+    .find(btn => btn.innerText.trim().toLowerCase() === 'cancels');
+
+  if (cancelBtn) {
+    console.log('[Huawei Auto] Click CANCEL (80% popup)');
+    cancelBtn.click();
+    return true;
+  }
+
+  return false;
+}
 
   async function handleDocPage() {
     const pagerExists = !!document.querySelector('#pageNumInput, i.clickStyle, img.footer-icon');
@@ -224,6 +240,7 @@
     createToggleButton();
 
     setInterval(() => {
+      handleHuaweiPopup(); 
       process();
     }, LOOP_MS);
 
