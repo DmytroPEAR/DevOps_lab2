@@ -19,6 +19,36 @@ const END = 0.3;
 
 let busy = false;
 let last = '';
+let enabled = true;
+
+function createToggle() {
+  if (document.getElementById('auto-toggle')) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'auto-toggle';
+  btn.innerText = 'AUTO: ON';
+
+  Object.assign(btn.style, {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    zIndex: 999999,
+    padding: '10px 14px',
+    background: 'green',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer'
+  });
+
+  btn.onclick = () => {
+    enabled = !enabled;
+    btn.innerText = enabled ? 'AUTO: ON' : 'AUTO: OFF';
+    btn.style.background = enabled ? 'green' : 'red';
+  };
+
+  document.body.appendChild(btn);
+}
 
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
@@ -70,7 +100,8 @@ function isBottom(){
 
 // 🔥 FIX: SIMPLE / PHOTO TYPE
 async function handleSimple(){
-  if(hasVideo()) return false;
+  // 🔥 ВАЖЛИВО: не ловити уроки з відео
+if (document.querySelector('video')) return false;
   if(!hasText()) return false;
 
   const key = 'simple'+location.href;
@@ -184,6 +215,8 @@ async function handleDoc(){
 
 // 🔥 MAIN
 async function run(){
+  if (!enabled) return;
+createToggle();
   if(busy) return;
   busy = true;
 
@@ -197,8 +230,8 @@ async function run(){
       return;
     }
 
-    if(await handleMixed()) return;
     if(await handleVideo()) return;
+    if(await handleMixed()) return;
     if(await handleSimple()) return;
     if(await handleText()) return;
 
