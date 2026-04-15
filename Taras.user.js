@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.4
+// @version      1.5
 // @description  Huawei auto: video + mixed lessons + docs + quiz skip + popup cancel
 // @match        https://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
@@ -216,33 +216,41 @@
   }
 
   function processMixedLesson() {
-    if (!hasMixedLesson()) return false;
+  if (!hasMixedLesson()) return false;
 
-    const keyBase = 'mixed:' + location.href;
+  const doneKey = 'mixed-done:' + location.href;
+  const waitKey = 'mixed-wait:' + location.href;
 
-    const videoDone = finishAllVideos();
-    if (!videoDone) {
-      log('Processing mixed VIDEO part');
-      return true;
-    }
+  const videoDone = finishAllVideos();
+  if (!videoDone) {
+    log('Processing mixed VIDEO part');
+    return true;
+  }
 
-    const atBottom = isScrolledToBottom();
-    if (!atBottom) {
-      log('Processing mixed TEXT part');
-      scrollLessonToBottom();
-      return true;
-    }
+  const atBottom = isScrolledToBottom();
+  if (!atBottom) {
+    log('Processing mixed TEXT part');
+    scrollLessonToBottom();
+    lastKey = waitKey;
+    return true;
+  }
 
-    if (lastKey === keyBase) return true;
-    lastKey = keyBase;
+  if (lastKey === doneKey) return true;
 
-    log('Mixed lesson complete -> Next');
+  if (lastKey === waitKey) {
+    lastKey = doneKey;
+    log('Mixed lesson complete -> wait 3 sec -> Next');
+
     setTimeout(() => {
       clickNext();
-    }, 800);
+    }, 3000);
 
     return true;
   }
+
+  lastKey = waitKey;
+  return true;
+}
 
   async function handleVideoPage() {
     if (hasMixedLesson()) return;
