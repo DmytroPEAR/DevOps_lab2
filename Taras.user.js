@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      2.32
+// @version      2.33
 // @description  
 // @match        https://talent.shixizhi.huawei.com/*
 // @match        https://e.huawei.com/en/talent/*
@@ -212,9 +212,11 @@
 }
     
     async function run() {
+    createToggle();
+
     enabled = localStorage.getItem('huawei_auto_enabled') !== '0';
     if (!enabled) return;
-    createToggle();
+
     if (busy) return;
     busy = true;
 
@@ -233,7 +235,6 @@
             const ok = skipVideo();
             if (!ok) return;
 
-            // Чекаємо поки сайт зарахує прогрес
             await sleep(4000);
 
             const nxt = findNextButton();
@@ -265,6 +266,6 @@
     }
 }
 
-console.log('[AUTO] Taras v2.2 active');
+console.log('[AUTO] Taras v2.32 active');
 setInterval(run, LOOP);
 })();
