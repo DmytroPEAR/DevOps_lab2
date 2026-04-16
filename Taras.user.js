@@ -7,7 +7,7 @@
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
 // @updateURL    https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
 // @grant         none
-// ==UserScript==
+// ==/UserScript==
 
 (function () {
     'use strict';
