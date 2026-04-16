@@ -1,8 +1,7 @@
-// ==UserScript==
+// ==/UserScript==
 // @name          Taras
 // @namespace     local
-// @version       2.37
-// @description   
+// @version       2.45
 // @match         https://talent.shixizhi.huawei.com/*
 // @match         https://e.huawei.com/en/talent/*
 // @grant         none
@@ -11,191 +10,216 @@
 (function () {
     'use strict';
 
-    const LOOP_TIME = 2000;
-    const READ = 5000;
+    const LOOP_TIME = 2500; // Трохи збільшив для стабільності
     let last = '';
     let busy = false;
-    let mainInterval = null; // Змінна для керування циклом
+    let stoppedGlobally = false;
+    let mainInterval = null;
 
+    // --- ДОПОМІЖНІ ФУНКЦІЇ (БЕЗПЕЧНІ) ---
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const safeText = (v) => (v || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+    function isVisible(el) {
+        if (!el) return false;
+        const style = window.getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0;
+    }
+
+    function tryGetDocFromFrame(frame) {
+        try { return frame.contentWindow?.document || null; } catch { return null; }
+    }
+
+    function getAllDocs() {
+        const docs = [{ doc: document, source: 'top' }];
+        const frames = document.querySelectorAll('iframe');
+        frames.forEach((f, i) => {
+            const fdoc = tryGetDocFromFrame(f);
+            if (fdoc) docs.push({ doc: fdoc, source: `iframe[${i}]` });
+        });
+        return docs;
+    }
+
+    function queryFirst(selectors, root = document) {
+        for (const s of selectors) {
+            try { const el = root.querySelector(s); if (el) return el; } catch {}
+        }
+        return null;
+    }
+
+    function queryAllMerged(selectors, root = document) {
+        const result = [];
+        selectors.forEach(s => {
+            try { result.push(...root.querySelectorAll(s)); } catch {}
+        });
+        return result;
+    }
+
+    function getMainContentRoot(doc = document) {
+        return queryFirst(['.learn-content-main', '.main-outer', '.moocClassId', '.graphic-content', '.ant-layout-content'], doc) || doc.body;
+    }
+
+    // --- ПОШУК ЕЛЕМЕНТІВ (РОЗУМНИЙ) ---
+    function findVideo() {
+        for (const { doc, source } of getAllDocs()) {
+            const v = doc.querySelector('video');
+            if (v) return { el: v, source };
+        }
+        return null;
+    }
+
+    function findDocPager() {
+        for (const { doc, source } of getAllDocs()) {
+            const el = queryFirst(['img[src*="toRight3"]', '.footer-icon[src*="toRight3"]'], doc);
+            if (el) return { el, source };
+        }
+        return null;
+    }
+
+    function findNextButton() {
+        for (const { doc, source } of getAllDocs()) {
+            // Пріоритет кнопкам з класом next
+            const direct = queryFirst(['div.next', '.next', '.next-btn', '.switch-btn .next', '[class*="next"]'], doc);
+            if (direct && isVisible(direct)) {
+                const text = safeText(direct.innerText || direct.textContent);
+                if (text && (text.includes('next') || text.includes('continue') || text.includes('finish'))) return { el: direct, source, text };
+            }
+            // Пошук по всіх кнопках
+            const allBtns = queryAllMerged(['button', '.ant-btn', '[role="button"]'], doc);
+            for (const b of allBtns) {
+                if (!isVisible(b)) continue;
+                const t = safeText(b.innerText || b.textContent);
+                if (t === 'next' || t === 'continue' || t === 'finish') return { el: b, source, text: t };
+            }
+        }
+        return null;
+    }
+
+    function findQuizSignals() {
+        let hits = 0;
+        for (const { doc } of getAllDocs()) {
+            const root = getMainContentRoot(doc);
+            const text = safeText(root.innerText);
+            if (/\b(single choice|multiple choice|true\/false|passing score)\b/.test(text)) hits++;
+            if (doc.querySelector('input[type="radio"], .ant-radio-wrapper')) hits++;
+        }
+        return hits > 0;
+    }
+
+    function pickBestScrollable() {
+        let best = null;
+        for (const { doc, source } of getAllDocs()) {
+            const candidates = queryAllMerged(['.learn-content-main', '.main-outer', '.graphic-content', '#innerContent', '.moocClassId'], doc);
+            candidates.forEach(el => {
+                if (!isVisible(el)) return;
+                const overflow = el.scrollHeight - el.clientHeight;
+                if (overflow > 150) {
+                    const score = overflow + (safeText(el.innerText).length * 0.2);
+                    if (!best || score > best.score) best = { el, score, source, overflow };
+                }
+            });
+        }
+        return best;
+    }
+
+    // --- КЛАСИФІКАЦІЯ ---
+    function classifyLesson() {
+        const video = findVideo();
+        const docPager = findDocPager();
+        const nextBtn = findNextButton();
+        const isQuiz = findQuizSignals();
+        const scrollable = pickBestScrollable();
+
+        let type = 'simple';
+        if (isQuiz) type = 'quiz-like';
+        else if (video && scrollable) type = 'video+scroll';
+        else if (video) type = 'video-only';
+        else if (docPager) type = 'document/book';
+        else if (scrollable) type = 'text/scroll';
+
+        return { type, video, docPager, nextBtn, scrollable };
+    }
+
+    // --- КЕРУВАННЯ ТА ІНТЕРФЕЙС ---
     function createStopButton() {
-        if (window !== window.top) return;
-        if (document.getElementById('auto-stop-btn')) return;
-
+        if (window !== window.top || document.getElementById('auto-stop-btn')) return;
         const btn = document.createElement('button');
         btn.id = 'auto-stop-btn';
         btn.innerText = 'STOP AUTO';
-
         Object.assign(btn.style, {
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            zIndex: 999999,
-            padding: '12px 16px',
-            background: 'red',
-            color: '#fff',
-            border: '2px solid white',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.5)'
+            position: 'fixed', top: '20px', right: '20px', zIndex: 1000000,
+            padding: '12px 16px', background: 'red', color: 'white', border: '2px solid white',
+            borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
         });
-
         btn.onclick = () => {
-            // КЛЮЧОВА ДІЯ: Зупиняємо інтервал назавжди
-            if (mainInterval) {
-                clearInterval(mainInterval);
-                mainInterval = null;
-            }
             stoppedGlobally = true;
+            clearInterval(mainInterval);
             btn.innerText = '⚠️ STOPPED';
             btn.style.background = '#333';
-            btn.style.cursor = 'default';
-            console.log('[AUTO] INTERVAL KILLED. Nothing will happen until refresh.');
         };
-
         document.body.appendChild(btn);
     }
 
-    // Додатковий захист для функцій всередині
-    let stoppedGlobally = false;
-
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-    function findNextButton() {
-        let btn = document.querySelector('.next, .next-btn, [class*="next"]');
-        if (btn && btn.innerText.includes('Next')) return btn;
-        const iframes = document.querySelectorAll('iframe');
-        for (let f of iframes) {
-            try {
-                btn = f.contentWindow.document.querySelector('.next, .next-btn, [class*="next"]');
-                if (btn && btn.innerText.includes('Next')) return btn;
-            } catch (e) {}
-        }
-        return null;
-    }
-
-    function getVideoElement() {
-        let v = document.querySelector('video');
-        if (v) return v;
-        const iframes = document.querySelectorAll('iframe');
-        for (let f of iframes) {
-            try { v = f.contentWindow.document.querySelector('video'); if (v) return v; } catch (e) {}
-        }
-        return null;
-    }
-    function isSimpleLesson() {
-    const hasVideo = !!getVideoElement();
-
-    let hasDoc = !!document.querySelector('img[src*="toRight3"]');
-    if (!hasDoc) {
-        const iframes = document.querySelectorAll('iframe');
-        for (let f of iframes) {
-            try {
-                hasDoc = !!f.contentWindow.document.querySelector('img[src*="toRight3"]');
-                if (hasDoc) break;
-            } catch (e) {}
-        }
-    }
-
-    const nextBtn = findNextButton();
-
-    const graphicBlock =
-        document.querySelector('.graphic-content') ||
-        document.querySelector('.content-style-html') ||
-        document.querySelector('#innerContent') ||
-        document.querySelector('.learn-content-main');
-
-    const contentText = (graphicBlock?.innerText || '').trim();
-
-    return !hasVideo && !hasDoc && !!nextBtn && contentText.length > 20;
-}
-    async function handleSimpleLesson() {
-    if (!isSimpleLesson()) return false;
-
-    const key = 'simple:' + location.href;
-    if (last === key) return true;
-
-    console.log('[AUTO] Mode: SIMPLE/PHOTO');
-
-    await sleep(3000);
-
-    const nxt = findNextButton();
-    if (nxt) {
-        nxt.click();
-        last = key;
-        return true;
-    }
-
-    return false;
-}
+    // --- ГОЛОВНИЙ ЦИКЛ ---
     async function run() {
-    if (stoppedGlobally) return;
-    createStopButton();
+        if (stoppedGlobally) return;
+        createStopButton();
+        if (busy) return;
+        busy = true;
 
-    if (busy) return;
-    busy = true;
+        try {
+            const c = classifyLesson();
+            const href = location.href;
 
-    try {
-        // 1. Книга / document iframe
-        let lastBtn = document.querySelector('img[src*="toRight3"]');
-        if (!lastBtn) {
-            const iframes = document.querySelectorAll('iframe');
-            for (let f of iframes) {
-                try { lastBtn = f.contentWindow.document.querySelector('img[src*="toRight3"]'); } catch(e){}
-                if (lastBtn) break;
+            // Якщо ми вже це робили на цій сторінці - чекаємо
+            if (last === href) { busy = false; return; }
+
+            console.log('[AUTO] Lesson Type:', c.type);
+
+            // 1. ОБРОБКА ВІДЕО
+            if (c.video) {
+                const v = c.video.el;
+                if (v.duration && !v.ended) {
+                    console.log('[AUTO] Fast-forwarding video...');
+                    v.muted = true;
+                    v.currentTime = v.duration - 0.5;
+                    v.play().catch(() => {});
+                    await sleep(3000);
+                }
             }
-        }
 
-        // 1. DOC
-if (lastBtn && last !== 'doc' + location.href) {
-    console.log('[AUTO] DOC');
-    lastBtn.click();
-    await sleep(5000);
-    const nxt = findNextButton();
-    if (nxt) {
-        nxt.click();
-        last = 'doc' + location.href;
-    }
-    return;
-}
+            // 2. ОБРОБКА СКРОЛУ (ТЕКСТУ)
+            if (c.scrollable) {
+                console.log('[AUTO] Scrolling content...');
+                c.scrollable.el.scrollTop = c.scrollable.el.scrollHeight;
+                await sleep(2000);
+            }
 
-// 2. VIDEO
-const v = getVideoElement();
-if (v && last !== 'v' + location.href) {
-    console.log('[AUTO] VIDEO');
+            // 3. ОБРОБКА ДОКУМЕНТІВ (КНИГИ)
+            if (c.type === 'document/book' && c.docPager) {
+                console.log('[AUTO] Clicking document pager...');
+                c.docPager.el.click();
+                await sleep(3000);
+            }
 
-    if (v.duration && !isNaN(v.duration)) {
-        v.play().catch(() => {});
-        v.currentTime = Math.max(0, v.duration - 0.5);
+            // 4. НАТИСКАННЯ NEXT
+            if (c.nextBtn) {
+                console.log('[AUTO] Clicking NEXT button:', c.nextBtn.text);
+                await sleep(2000);
+                c.nextBtn.el.click();
+                last = href; // Мітимо сторінку як пройдену
+            } else {
+                if (c.type === 'quiz-like') console.log('[AUTO] Quiz detected. Please solve it manually!');
+            }
 
-        v.dispatchEvent(new Event('timeupdate', { bubbles: true }));
-        v.dispatchEvent(new Event('seeking', { bubbles: true }));
-        v.dispatchEvent(new Event('seeked', { bubbles: true }));
-        v.dispatchEvent(new Event('ended', { bubbles: true }));
-
-        await sleep(4000);
-
-        const nxt = findNextButton();
-        if (nxt) {
-            nxt.click();
-            last = 'v' + location.href;
+        } catch (err) {
+            console.error('[AUTO] Error:', err);
+        } finally {
+            busy = false;
         }
     }
-    return;
-}
 
-// 3. SIMPLE / PHOTO / SUMMARY
-if (await handleSimpleLesson()) return;
-
-    } catch (err) {
-        console.error('[AUTO] Error:', err);
-    } finally {
-        busy = false;
-    }
-}
-
-    console.log('[AUTO] Taras v2.41 ready');
-    // Запускаємо і зберігаємо ID інтервалу
+    console.log('[AUTO] Taras v2.45 Hybrid Ready');
     mainInterval = setInterval(run, LOOP_TIME);
 })();
