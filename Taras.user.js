@@ -2,7 +2,7 @@
 // @name          Taras Stop Only
 // @namespace     local
 // @version       2.34
-// @description   Huawei course auto with STOP button
+// @description   
 // @match         https://talent.shixizhi.huawei.com/*
 // @match         https://e.huawei.com/en/talent/*
 // @grant         none
