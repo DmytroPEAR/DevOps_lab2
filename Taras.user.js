@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      2.31
+// @version      2.32
 // @description  
 // @match        https://talent.shixizhi.huawei.com/*
 // @match        https://e.huawei.com/en/talent/*
@@ -17,7 +17,7 @@
 
     let busy = false;
     let last = '';
-    let enabled = true;
+    let enabled = localStorage.getItem('huawei_auto_enabled') !== '0';
 
     function createToggle() {
     if (window !== window.top) return;
@@ -25,7 +25,12 @@
 
     const btn = document.createElement('button');
     btn.id = 'auto-toggle';
-    btn.innerText = 'AUTO: ON';
+
+    function refreshButton() {
+        enabled = localStorage.getItem('huawei_auto_enabled') !== '0';
+        btn.innerText = enabled ? 'AUTO: ON' : 'AUTO: OFF';
+        btn.style.background = enabled ? 'green' : 'red';
+    }
 
     Object.assign(btn.style, {
         position: 'fixed',
@@ -33,7 +38,6 @@
         right: '20px',
         zIndex: 999999,
         padding: '10px 14px',
-        background: 'green',
         color: '#fff',
         border: 'none',
         borderRadius: '8px',
@@ -42,12 +46,15 @@
     });
 
     btn.onclick = () => {
-        enabled = !enabled;
-        btn.innerText = enabled ? 'AUTO: ON' : 'AUTO: OFF';
-        btn.style.background = enabled ? 'green' : 'red';
+        const current = localStorage.getItem('huawei_auto_enabled') !== '0';
+        localStorage.setItem('huawei_auto_enabled', current ? '0' : '1');
+        refreshButton();
     };
 
+    refreshButton();
     document.body.appendChild(btn);
+
+    window.addEventListener('storage', refreshButton);
 }
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -153,38 +160,59 @@
 
     if (!hasVideo || !hasText) return false;
 
+    const key = 'vt' + location.href;
+    if (last === key) return true;
+
     console.log('[AUTO] Mode: VIDEO + TEXT');
 
-    // 1. відео
-    const v = getVideoElement();
-    if (v && v.duration && !isNaN(v.duration)) {
-        v.currentTime = v.duration - 0.5;
-        v.play().catch(() => {});
-    }
+    // 1. Спочатку відео
+    const ok = skipVideo();
+    if (!ok) return false;
 
-    await sleep(2000);
+    // Даємо часу системі зарахувати відео
+    await sleep(4000);
 
-    // 2. скрол тексту
-    const scrollBlock = document.querySelector('#innerContent') 
-        || document.querySelector('.learn-content-main');
+    // 2. Скролимо текстовий блок
+    const scrollBlock =
+        document.querySelector('#innerContent') ||
+        document.querySelector('.learn-content-main-overflow.overflow-outer') ||
+        document.querySelector('.learn-content-main.main-outer') ||
+        document.querySelector('.graphic-content');
 
     if (scrollBlock) {
         scrollBlock.scrollTop = scrollBlock.scrollHeight;
+        scrollBlock.dispatchEvent(new Event('scroll', { bubbles: true }));
+        console.log('[AUTO] Scrolled text block to bottom');
+    } else {
+        window.scrollTo(0, document.body.scrollHeight);
+        window.dispatchEvent(new Event('scroll'));
+        console.log('[AUTO] Fallback window scroll');
+    }
+
+    // Даємо часу системі зарахувати читання тексту
+    await sleep(3000);
+
+    // 3. Ще раз доскролюємо для надійності
+    if (scrollBlock) {
+        scrollBlock.scrollTop = scrollBlock.scrollHeight;
+        scrollBlock.dispatchEvent(new Event('scroll', { bubbles: true }));
     }
 
     await sleep(2000);
 
-    // 3. next
+    // 4. Тільки тепер Next
     const nxt = findNextButton();
     if (nxt) {
+        console.log('[AUTO] Click Next after VIDEO + TEXT');
         nxt.click();
-        last = 'vt' + location.href;
+        last = key;
     }
 
     return true;
 }
     
     async function run() {
+    enabled = localStorage.getItem('huawei_auto_enabled') !== '0';
     if (!enabled) return;
     createToggle();
     if (busy) return;
