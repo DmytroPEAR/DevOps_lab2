@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      2.2
-// @description  Huawei course auto (Iframe Next Button Fix)
+// @version      2.3
+// @description  (Iframe Next Button Fix)
 // @match        https://talent.shixizhi.huawei.com/*
+// @match        https://e.huawei.com/en/talent/*
 // @grant        none
 // ==/UserScript==
 
@@ -68,18 +69,33 @@
         return null;
     }
 
-    function skipVideo() {
-        const v = getVideoElement();
-        if (!v) return false;
-        try {
-            if (v.duration && !isNaN(v.duration)) {
-                v.currentTime = v.duration - END;
-                v.play().catch(() => {});
-                return true;
-            }
-        } catch (e) {}
+   function skipVideo() {
+    const v = getVideoElement();
+    if (!v) return false;
+
+    try {
+        if (!v.duration || isNaN(v.duration)) return false;
+
+        // 1. Запускаємо відео
+        v.play().catch(() => {});
+
+        // 2. Перемотуємо
+        v.currentTime = v.duration - 0.3;
+
+        // 3. Форсимо події (КЛЮЧ)
+        v.dispatchEvent(new Event('timeupdate', { bubbles: true }));
+        v.dispatchEvent(new Event('seeking', { bubbles: true }));
+        v.dispatchEvent(new Event('seeked', { bubbles: true }));
+        v.dispatchEvent(new Event('ended', { bubbles: true }));
+
+        console.log('[AUTO] Video forced to end');
+
+        return true;
+    } catch (e) {
+        console.error('[AUTO] skipVideo error:', e);
         return false;
     }
+}
 
     // 🔥 ВИПРАВЛЕНО: Обробка книг (Doc)
     async function handleDoc() {
@@ -125,14 +141,24 @@
 
             // 2. Відео
             const v = getVideoElement();
-            if (v) {
-                console.log('[AUTO] Mode: VIDEO');
-                skipVideo();
-                await sleep(3000);
-                const nxt = findNextButton();
-                if (nxt) { nxt.click(); last = 'v' + location.href; }
-                return;
-            }
+if (v) {
+    console.log('[AUTO] Mode: VIDEO');
+
+    const ok = skipVideo();
+    if (!ok) return;
+
+    // Чекаємо поки сайт зарахує прогрес
+    await sleep(4000);
+
+    const nxt = findNextButton();
+    if (nxt) {
+        console.log('[AUTO] Click Next after video');
+        nxt.click();
+        last = 'v' + location.href;
+    }
+
+    return;
+}
 
             // 3. Текст / Simple
             const nxt = findNextButton();
