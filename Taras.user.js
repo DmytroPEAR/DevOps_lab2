@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name          Taras Hard Stop
+// @name          Taras
 // @namespace     local
-// @version       2.35
+// @version       2.36
 // @description   Huawei auto - Killing interval on stop
 // @match         https://talent.shixizhi.huawei.com/*
 // @match         https://e.huawei.com/en/talent/*
