@@ -1,4 +1,4 @@
-// ==/UserScript==
+// ==UserScript==
 // @name          Taras
 // @namespace     local
 // @version       2.45
