@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      2.3
-// @description  (Iframe Next Button Fix)
+// @version      2.31
+// @description  
 // @match        https://talent.shixizhi.huawei.com/*
 // @match        https://e.huawei.com/en/talent/*
 // @grant        none
@@ -20,23 +20,35 @@
     let enabled = true;
 
     function createToggle() {
-        if (document.getElementById('auto-toggle')) return;
-        const btn = document.createElement('button');
-        btn.id = 'auto-toggle';
-        btn.innerText = 'AUTO: ON';
-        Object.assign(btn.style, {
-            position: 'fixed', top: '20px', right: '20px', zIndex: 999999,
-            padding: '10px 14px', background: 'green', color: '#fff',
-            border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
-        });
-        btn.onclick = () => {
-            enabled = !enabled;
-            btn.innerText = enabled ? 'AUTO: ON' : 'AUTO: OFF';
-            btn.style.background = enabled ? 'green' : 'red';
-        };
-        document.body.appendChild(btn);
-    }
+    if (window !== window.top) return;
+    if (document.getElementById('auto-toggle')) return;
 
+    const btn = document.createElement('button');
+    btn.id = 'auto-toggle';
+    btn.innerText = 'AUTO: ON';
+
+    Object.assign(btn.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: 999999,
+        padding: '10px 14px',
+        background: 'green',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontWeight: 'bold'
+    });
+
+    btn.onclick = () => {
+        enabled = !enabled;
+        btn.innerText = enabled ? 'AUTO: ON' : 'AUTO: OFF';
+        btn.style.background = enabled ? 'green' : 'red';
+    };
+
+    document.body.appendChild(btn);
+}
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     // Функція пошуку кнопки Next всюди (і в основному вікні, і в фреймах)
@@ -128,57 +140,103 @@
         }
         return true;
     }
+    async function handleVideoWithText() {
+    const blocks = document.querySelectorAll('.courseware-wrapper');
 
-    async function run() {
-        if (!enabled) return;
-        createToggle();
-        if (busy) return;
-        busy = true;
+    let hasVideo = false;
+    let hasText = false;
 
-        try {
-            // 1. Книги
-            if (await handleDoc()) return;
+    blocks.forEach(b => {
+        if (b.className.includes('mult-video')) hasVideo = true;
+        if (b.className.includes('mult-graphic')) hasText = true;
+    });
 
-            // 2. Відео
-            const v = getVideoElement();
-if (v) {
-    console.log('[AUTO] Mode: VIDEO');
+    if (!hasVideo || !hasText) return false;
 
-    const ok = skipVideo();
-    if (!ok) return;
+    console.log('[AUTO] Mode: VIDEO + TEXT');
 
-    // Чекаємо поки сайт зарахує прогрес
-    await sleep(4000);
+    // 1. відео
+    const v = getVideoElement();
+    if (v && v.duration && !isNaN(v.duration)) {
+        v.currentTime = v.duration - 0.5;
+        v.play().catch(() => {});
+    }
 
+    await sleep(2000);
+
+    // 2. скрол тексту
+    const scrollBlock = document.querySelector('#innerContent') 
+        || document.querySelector('.learn-content-main');
+
+    if (scrollBlock) {
+        scrollBlock.scrollTop = scrollBlock.scrollHeight;
+    }
+
+    await sleep(2000);
+
+    // 3. next
     const nxt = findNextButton();
     if (nxt) {
-        console.log('[AUTO] Click Next after video');
         nxt.click();
-        last = 'v' + location.href;
+        last = 'vt' + location.href;
     }
 
-    return;
+    return true;
 }
+    
+    async function run() {
+    if (!enabled) return;
+    createToggle();
+    if (busy) return;
+    busy = true;
 
-            // 3. Текст / Simple
+    try {
+        // 1. Книги
+        if (await handleDoc()) return;
+
+        // 2. Відео + текст
+        if (await handleVideoWithText()) return;
+
+        // 3. Відео
+        const v = getVideoElement();
+        if (v) {
+            console.log('[AUTO] Mode: VIDEO');
+
+            const ok = skipVideo();
+            if (!ok) return;
+
+            // Чекаємо поки сайт зарахує прогрес
+            await sleep(4000);
+
             const nxt = findNextButton();
             if (nxt) {
-                const key = 's' + location.href;
-                if (last !== key) {
-                    console.log('[AUTO] Mode: SIMPLE');
-                    await sleep(READ);
-                    nxt.click();
-                    last = key;
-                }
+                console.log('[AUTO] Click Next after video');
+                nxt.click();
+                last = 'v' + location.href;
             }
 
-        } catch (err) {
-            console.error('[AUTO] Error:', err);
-        } finally {
-            busy = false;
+            return;
         }
-    }
 
-    console.log('[AUTO] Taras v2.2 active');
-    setInterval(run, LOOP);
+        // 4. Текст / Simple
+        const nxt = findNextButton();
+        if (nxt) {
+            const key = 's' + location.href;
+            if (last !== key) {
+                console.log('[AUTO] Mode: SIMPLE');
+                await sleep(READ);
+                nxt.click();
+                last = key;
+            }
+        }
+
+    } catch (err) {
+        console.error('[AUTO] Error:', err);
+    } finally {
+        busy = false;
+    }
+}
+
+console.log('[AUTO] Taras v2.2 active');
+setInterval(run, LOOP);
 })();
