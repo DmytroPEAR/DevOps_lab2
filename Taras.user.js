@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name          Taras
 // @namespace     local
-// @version       2.36
-// @description   Huawei auto - Killing interval on stop
+// @version       2.37
+// @description   
 // @match         https://talent.shixizhi.huawei.com/*
 // @match         https://e.huawei.com/en/talent/*
 // @grant         none
@@ -84,62 +84,116 @@
         }
         return null;
     }
+    function isSimpleLesson() {
+    const hasVideo = !!getVideoElement();
 
-    async function run() {
-        if (stoppedGlobally) return; // Подвійна перевірка
-        createStopButton();
-
-        if (busy) return;
-        busy = true;
-
-        try {
-            // Логіка книг
-            let lastBtn = document.querySelector('img[src*="toRight3"]');
-            if (!lastBtn) {
-                const iframes = document.querySelectorAll('iframe');
-                for (let f of iframes) {
-                    try { lastBtn = f.contentWindow.document.querySelector('img[src*="toRight3"]'); } catch(e){}
-                    if (lastBtn) break;
-                }
-            }
-
-            if (lastBtn && last !== 'doc' + location.href) {
-                lastBtn.click();
-                await sleep(5000);
-                const nxt = findNextButton();
-                if (nxt) { nxt.click(); last = 'doc' + location.href; }
-                return;
-            }
-
-            // Логіка відео
-            const v = getVideoElement();
-            if (v && last !== 'v' + location.href) {
-                if (v.duration) {
-                    v.play().catch(() => {});
-                    v.currentTime = v.duration - 0.5;
-                    await sleep(4000);
-                    const nxt = findNextButton();
-                    if (nxt) { nxt.click(); last = 'v' + location.href; }
-                }
-                return;
-            }
-
-            // Логіка простого тексту
-            const nxt = findNextButton();
-            if (nxt && last !== 's' + location.href) {
-                console.log('[AUTO] Waiting to click Next...');
-                await sleep(READ);
-                if (!stoppedGlobally) { // Перевірка перед самим кліком
-                    nxt.click();
-                    last = 's' + location.href;
-                }
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            busy = false;
+    let hasDoc = !!document.querySelector('img[src*="toRight3"]');
+    if (!hasDoc) {
+        const iframes = document.querySelectorAll('iframe');
+        for (let f of iframes) {
+            try {
+                hasDoc = !!f.contentWindow.document.querySelector('img[src*="toRight3"]');
+                if (hasDoc) break;
+            } catch (e) {}
         }
     }
+
+    const nextBtn = findNextButton();
+
+    const graphicBlock =
+        document.querySelector('.graphic-content') ||
+        document.querySelector('.content-style-html') ||
+        document.querySelector('#innerContent') ||
+        document.querySelector('.learn-content-main');
+
+    const contentText = (graphicBlock?.innerText || '').trim();
+
+    return !hasVideo && !hasDoc && !!nextBtn && contentText.length > 20;
+}
+    async function handleSimpleLesson() {
+    if (!isSimpleLesson()) return false;
+
+    const key = 'simple:' + location.href;
+    if (last === key) return true;
+
+    console.log('[AUTO] Mode: SIMPLE/PHOTO');
+
+    await sleep(3000);
+
+    const nxt = findNextButton();
+    if (nxt) {
+        nxt.click();
+        last = key;
+        return true;
+    }
+
+    return false;
+}
+    async function run() {
+    if (stoppedGlobally) return;
+    createStopButton();
+
+    if (busy) return;
+    busy = true;
+
+    try {
+        // 1. Книга / document iframe
+        let lastBtn = document.querySelector('img[src*="toRight3"]');
+        if (!lastBtn) {
+            const iframes = document.querySelectorAll('iframe');
+            for (let f of iframes) {
+                try { lastBtn = f.contentWindow.document.querySelector('img[src*="toRight3"]'); } catch(e){}
+                if (lastBtn) break;
+            }
+        }
+
+        // 1. DOC
+if (lastBtn && last !== 'doc' + location.href) {
+    console.log('[AUTO] DOC');
+    lastBtn.click();
+    await sleep(5000);
+    const nxt = findNextButton();
+    if (nxt) {
+        nxt.click();
+        last = 'doc' + location.href;
+    }
+    return;
+}
+
+// 2. VIDEO
+const v = getVideoElement();
+if (v && last !== 'v' + location.href) {
+    console.log('[AUTO] VIDEO');
+
+    if (v.duration && !isNaN(v.duration)) {
+        v.play().catch(() => {});
+        v.currentTime = Math.max(0, v.duration - 0.5);
+
+        v.dispatchEvent(new Event('timeupdate', { bubbles: true }));
+        v.dispatchEvent(new Event('seeking', { bubbles: true }));
+        v.dispatchEvent(new Event('seeked', { bubbles: true }));
+        v.dispatchEvent(new Event('ended', { bubbles: true }));
+
+        await sleep(4000);
+
+        const nxt = findNextButton();
+        if (nxt) {
+            nxt.click();
+            last = 'v' + location.href;
+        }
+    }
+    return;
+}
+
+// 3. SIMPLE / PHOTO / SUMMARY
+if (await handleSimpleLesson()) return;
+
+    } catch (err) {
+        console.error('[AUTO] Error:', err);
+    } finally {
+        busy = false;
+    }
+}
 
     console.log('[AUTO] Taras v2.41 ready');
     // Запускаємо і зберігаємо ID інтервалу
