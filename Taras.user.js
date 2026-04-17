@@ -1,12 +1,10 @@
 // ==UserScript==
 // @name         Taras
 // @namespace    local
-// @version      1.0
-// @description  0202
+// @version      3.0
+// @description  ----
 // @match        https://talent.shixizhi.huawei.com/*
 // @match        https://e.huawei.com/en/talent/*
-// @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
-// @updateURL    https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
 // @grant        none
 // ==/UserScript==
 
@@ -152,16 +150,45 @@
     return null;
   }
 
-  function findDocPager() {
-    for (const { doc, source } of getAllDocs()) {
-      const el = queryFirst([
-        'img[src*="toRight3"]',
-        '.footer-icon[src*="toRight3"]'
-      ], doc);
-      if (el) return { el, source };
+ function findDocPager() {
+  for (const { doc, source } of getAllDocs()) {
+    // 1) справжня кнопка "в кінець"
+    const pagerBtn = queryFirst([
+      'img[src*="toRight3"]',
+      '.footer-icon[src*="toRight3"]',
+      '#preventPoint[src*="toRight3"]',
+      '#preventPoint'
+    ], doc);
+
+    if (pagerBtn) {
+      return {
+        el: pagerBtn,
+        source,
+        mode: 'pager-button'
+      };
     }
-    return null;
+
+    // 2) контейнер книги / документа
+    const docContainer = queryFirst([
+      '.content-document.document-content',
+      '.document-content',
+      '#myBtn.content-document',
+      '#myBtn.document-content',
+      '[class*="document-content"]',
+      '[class*="content-document"]'
+    ], doc);
+
+    if (docContainer) {
+      return {
+        el: docContainer,
+        source,
+        mode: 'doc-container'
+      };
+    }
   }
+
+  return null;
+}
 
   function isInsideDiagPanel(el) {
     return !!el?.closest?.(`#${PANEL_ID}`);
@@ -198,20 +225,48 @@
 }
 
 async function handleProgress80Popup() {
-  const popup = findProgress80Popup();
-  if (!popup) return false;
+  const docs = getAllDocs();
 
-  const key = `popup80:${location.href}`;
-  if (state.lastActionKey === key) return true;
+  for (const { doc } of docs) {
+    const modals = [
+      ...doc.querySelectorAll('.kltCourse-modal-root, .kltCourse-modal-wrap, .ant-modal, [role="dialog"]')
+    ];
 
-  log('Handle POPUP 80%');
+    for (const modal of modals) {
+      const txt = (modal.innerText || modal.textContent || '').replace(/\s+/g, ' ').trim();
 
-  await sleep(1200);
+      const is80Popup =
+        /80%/.test(txt) ||
+        /evaluate/i.test(txt) ||
+        /learning progress has reached/i.test(txt);
 
-  if (popup.confirmBtn) {
-    popup.confirmBtn.click();
-    state.lastActionKey = key;
-    return true;
+      if (!is80Popup) continue;
+
+      const buttons = [
+        ...modal.querySelectorAll('button, .ant-btn, [role="button"]')
+      ];
+
+      let closeBtn = null;
+
+      for (const btn of buttons) {
+        const btxt = (btn.innerText || btn.textContent || '').replace(/\s+/g, ' ').trim();
+
+        if (/^(cancel|cancels|close)$/i.test(btxt)) {
+          closeBtn = btn;
+          break;
+        }
+      }
+
+      if (closeBtn) {
+        console.log('[AUTO] Handle POPUP 80% -> click', closeBtn.innerText.trim());
+        closeBtn.click();
+        await sleep(1200);
+        return true;
+      }
+
+      console.log('[AUTO] POPUP 80% found, but safe close button not found');
+      return false;
+    }
   }
 
   return false;
@@ -436,13 +491,13 @@ async function handleProgress80Popup() {
     type = 'document/book';
   } else if (quizHits.length) {
     type = 'quiz-like';
-  } else if (!video && photoHits.length && nextBtn) {
+  } else if (!video && !docPager && photoHits.length && nextBtn) {
     type = 'photo';
-  } else if (!video && scrollable && scrollable.overflow > 400) {
+  } else if (!video && !docPager && scrollable && scrollable.overflow > 400) {
     type = 'text/scroll';
-  } else if (!video && contentTextLen > 300) {
+  } else if (!video && !docPager && contentTextLen > 300) {
     type = 'text/static';
-  } else if (nextBtn && contentTextLen > 20) {
+  } else if (!docPager && nextBtn && contentTextLen > 20) {
     type = 'simple';
   }
 
@@ -459,6 +514,12 @@ async function handleProgress80Popup() {
 }
   async function handlePhotoLesson(c) {
   if (c.type !== 'photo') return false;
+
+  const docPagerNow = c.docPager || findDocPager();
+  if (docPagerNow) {
+    log('PHOTO skipped: document/book detected');
+    return false;
+  }
 
   const key = `photo:${location.href}`;
   if (state.lastActionKey === key) return true;
@@ -590,6 +651,46 @@ async function handleProgress80Popup() {
     state.lastActionKey = key;
     return true;
   }
+    async function handleDocumentBook(c) {
+  if (c.type !== 'document/book') return false;
+
+  const key = 'doc:' + location.href;
+  if (state.lastActionKey === key) return true;
+
+  console.log('[AUTO] DOC');
+
+  if (c.docPager?.mode === 'pager-button') {
+    c.docPager.el.click();
+    await sleep(5000);
+  } else {
+    await sleep(1500);
+
+    const realPager = queryFirst([
+      'img[src*="toRight3"]',
+      '.footer-icon[src*="toRight3"]',
+      '#preventPoint[src*="toRight3"]',
+      '#preventPoint'
+    ], document);
+
+    if (realPager) {
+      realPager.click();
+      await sleep(5000);
+    } else {
+      console.log('[AUTO] DOC detected, but pager button not found yet');
+      return true;
+    }
+  }
+
+  const nxt = c.nextBtn?.el || findNextButton()?.el;
+  if (nxt) {
+    await sleep(1500);
+    nxt.click();
+    state.lastActionKey = key;
+    return true;
+  }
+
+  return true;
+}
 
   async function autoRun() {
   if (state.stopped || state.busy) return;
@@ -600,6 +701,7 @@ async function handleProgress80Popup() {
     log('TYPE =', c.type);
     // 🔥 POPUP 80% (ставимо ПЕРШИМ)
     if (await handleProgress80Popup()) return;
+    if (await handleDocumentBook(c)) return;
 
     if (c.type === 'video+scroll') {
       await handleVideoScroll(c);
