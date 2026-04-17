@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Auto Lessons
+// @name         Taras
 // @namespace    local
 // @version      1.0
 // @description  0202
