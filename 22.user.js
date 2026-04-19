@@ -149,7 +149,7 @@
     {
         "type": "single",
         "question": "The most common looback interface address is 127.0. 0.1. (   )",
-        "answerText": "False"
+        "answerText": "True"
     },
     {
         "type": "single",
