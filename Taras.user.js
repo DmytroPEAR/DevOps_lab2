@@ -5,6 +5,8 @@
 // @description  ----
 // @match        https://talent.shixizhi.huawei.com/*
 // @match        https://e.huawei.com/en/talent/*
+// @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
+// @updateURL    https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/Taras.user.js
 // @grant        none
 // ==/UserScript==
 
