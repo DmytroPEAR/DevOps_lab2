@@ -1288,6 +1288,11 @@
         "type": "single",
         "question": "In the process of solving the root of an equation using the Newton-Raphson method, what is the key calculation step for each iteration?",
         "answerText": "Subtract the ratio of the function value to its derivative value from the current value"
+    },
+    {
+        "type": "single",
+        "question": "When configuring network connections, which of the following tools should be used to support InfiniBand type connections?",
+        "answerText": "nmcli"
     }
 
 ];
