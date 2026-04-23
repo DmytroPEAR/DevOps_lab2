@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         22
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  ---
 // @match        *://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/22.user.js
@@ -1293,8 +1293,406 @@
         "type": "single",
         "question": "When configuring network connections, which of the following tools should be used to support InfiniBand type connections?",
         "answerText": "nmcli"
-    }
-
+    },
+       {
+        "type": "multiple",
+        "question": "Which of the followings are python features?",
+        "answerText": "Third-party,Object-oriented,simple  syntax"
+    },
+{
+        "type": "single",
+        "question": "(multiple choice) Which fields can python be applied?",
+        "answerText": "All"
+    },
+           {
+        "type": "single",
+        "question": "Intrinsic security evolves from external protection to intrinsic protection. The result is full-process adaptive security protection.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "The industry solutions for the Intelligent World 2030 will follow three key trends: a shift towards digital transformation, digital architectures consolidating into a unified network, cloud, and system, and a focus on zero carbon emissions, with energy efficiency as the foundation of industry solutions.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "By 2030, the total amount of data generated worldwide will reach 100 million YB each year. Unstructured data will account for over 82%.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "GDI is a tool for comprehensively assessing the digitalization process of each country. It covers four elements: connectivity, digital foundation, green energy, and policy & ecosystem.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "In 2030, the macro architecture of data centers will move towards storage-compute separation, and the micro architecture will be integrated with storage and compute.",
+        "answerText": "True"
+    },
+           {
+        "type": "single",
+        "question": "Which organization has Huawei worked with to research and release the GCI?",
+        "answerText": "IDC"
+    },
+    {
+        "type": "single",
+        "question": "In numpy, If a = np.arange(12).reshape(4, 3), b = np.linspace(3, 27, 9).reshape(3, 3), which function can we use to merge a and b by rows?",
+        "answerText": "np.concatenate((a,b), axis=0)"
+    },
+    {
+        "type": "single",
+        "question": "Which statement do we use to catch errors or exceptions in Python?",
+        "answerText": "Try-except statement"
+    },
+    {
+        "type": "single",
+        "question": "Which symbol do we use for Python decorator?",
+        "answerText": "@"
+    },
+    {
+        "type": "single",
+        "question": "If we want to get the process ID (PID) of the calling process, which module can we use?",
+        "answerText": "Os module"
+    },
+    {
+        "type": "single",
+        "question": "In a python list: List1 = [1, 2, 3, 4], we can get the element 2 by ().",
+        "answerText": "List1[1]"
+    },
+    {
+        "type": "single",
+        "question": "Tuples are mutable sequences, typically used to store collections of heterogeneous data.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "According to the material, what is the ICT talent conversion rate in Frontrunners?",
+        "answerText": "50%"
+    },
+    {
+        "type": "single",
+        "question": "Which is not python data types?",
+        "answerText": "Void"
+    },
+    {
+        "type": "single",
+        "question": "If A = np.array([ [3,4],[7,8] ]), then we use scipy.linalg.eig(A), how many eigenvalues can we get?",
+        "answerText": "2"
+    },
+    {
+        "type": "single",
+        "question": "We can use ( ) function to check the documentation of modules, functions, classes, keywords etc. in python.",
+        "answerText": "help()"
+    },
+    {
+        "type": "single",
+        "question": "If we want to plot the frequency of data, which plot is the best choice?",
+        "answerText": "Histogram"
+    },
+    {
+        "type": "single",
+        "question": "If we want to do matrix multiplication to arrays, which of them can we use?",
+        "answerText": "@,numpy.dot "
+    },
+    {
+        "type": "single",
+        "question": "Which functions are in pandas but not in numpy?",
+        "answerText": "describe,count"
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) Which of the following criteria must be followed when two matrices are multiplied?",
+        "answerText": "The number of columns in the left matrix must be equal to the number of rows in the right matrix."
+    },
+    {
+        "type": "true_false",
+        "question": "（True or False）In an optimization problem, if there are no other constraints for each variable except for the objective function, then it is called an unconstrained optimization problem. Otherwise, it is called a constrained optimization problem.",
+        "answerText": "True"
+    },
+    {
+        "type": "true_false",
+        "question": "（True or False）AI is closely related to disciplines such as linear algebra and probability theory.",
+        "answerText": "True"
+    },
+    {
+        "type": "true_false",
+        "question": "(True or false) The mean value in normal distribution determines the symmetry axis of distribution curve.",
+        "answerText": "True"
+    },
+    {
+        "type": "true_false",
+        "question": "(True or false) The eigenvalues and eigenvectors are very important to the matrix. Using some of the eigenvalues and corresponding eigenvectors of the matrix, we can compress the image.",
+        "answerText": "True"
+    },
+    {
+        "type": "true_false",
+        "question": " (True or false) The mean does not reacted as much as the mean by outliers. This property is known as ‘robustness’.",
+        "answerText": "False"
+    },
+    {
+        "type": "true_false",
+        "question": "(True or false) If two events A and B are not independent, we can get ????(????????)=????(????)????(????).",
+        "answerText": "false"
+    },
+        {
+        "type": "true_false",
+        "question": "(True or false) A matrix can be regarded as a combination of many vectors.",
+        "answerText": "True"
+    },
+           {
+        "type": "single",
+        "question": "(Single choice) Which of the following criteria must be followed when two matrices are multiplied?",
+        "answerText": "The number of columns in the left matrix must be equal to the number of rows in the right matrix."
+    },
+    {
+        "type": "multiple",
+        "question": "(multiple choice) () use the first-order gradient to calculate the extremum point.",
+        "answerText": "Conjugate Gradient, Gradient Descent"
+    },
+           {
+        "type": "single",
+        "question": "(Single choice) We can use np.std method to get ().",
+        "answerText": "standard deviation"
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) We can use scipy.stats.binom method to generate () distribution.",
+        "answerText": "binomial"
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) () describes how closely the observed data match the distribution expected under the null hypothesis of that statistical test",
+        "answerText": "test statistic"
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) If we use matrix \n\\begin{bmatrix}1 &amp; 0 \\\\ 0 &amp; -1\\\\ \\end{bmatrix}\n  to multiply vector (x,y)<sup>T</sup>, the result will be()?",
+        "answerText": "(x,-y)<sup>T"
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) If we use matrix \n\\begin{bmatrix}1 &amp; 0 \\\\ 0 &amp; -1\\\\ \\end{bmatrix}\n14. (Single choice) What is the value of determinant \\begin{bmatrix}3 &amp; 2 \\\\ 1 &amp; 5\\\\ \\end{bmatrix}",
+        "answerText": "13"
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) Which of the following criteria must be followed when two matrices are multiplied?",
+        "answerText": "The number of columns in the left matrix must be equal to the number of rows in the right matrix."
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) () describes how closely the observed data match the distribution expected under the null hypothesis of that statistical test",
+        "answerText": "test statistic"
+    },
+    {
+        "type": "single",
+        "question": "(Single choice) For an identity matrix, all diagonal elements must be ()?",
+        "answerText": "1"
+    },
+    {
+        "type": "multiple",
+        "question": "(Multiple choice) We can use scipy.linalg method to obtain the () of a matrix.",
+        "answerText": "Eigenvector, Inverse matrix, Eigenvalue"
+    },
+    {
+        "type": "true_false",
+        "question": "(True or false) In an optimization problem, if there are no other constraints for each variable except for the objective function, then it is called an unconstrained optimization problem. Otherwise, it is called a constrained optimization problem.",
+        "answerText": "True"
+    },
+    {
+        "type": "true_false",
+        "question": "(True or false) AI is closely related to disciplines such as linear algebra and probability theory.",
+        "answerText": "True"
+    },
+    {
+        "type": "true_false",
+        "question": "\\begin{bmatrix}0 &amp; -1 \\\\ 0 &amp; 1\\\\ \\end{bmatrix}\n1. (True or false) In an optimization problem, if there are no other constraints for each variable except for the objective function, then it is called an unconstrained optimization problem. Otherwise, it is called a constrained optimization problem.",
+        "answerText": "True"
+    },
+           {
+        "type": "single",
+        "question": "An AI speaker is a typical use case for speech processing.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "Huawei's all-scenario AI solutions can be deployed in all kinds of environments, including public cloud, private clouds, various forms of edge computing, industrial IoT devices, and consumer devices.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "Typically, in a network that uses sigmoid, the gradient decreases to 0 within five layers, making the network difficult to train.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "When you train a deep neural network with the softsign function, if the network is very deep, an increasing number of back-propagated gradients fall into the saturation area, making the gradient module smaller and finally close to 0, and the weight cannot be updated.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "If the hyperparameter search space is large, random search is better than grid search.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "In a random search, each setting item is sampled from possible parameter values to find the optimal parameter subset.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "Batch normalization is a technique used in deep learning to optimize training. It reduces the dependence on initial weights and learning rates, resulting in improved model performance.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "The core idea of adapter tuning is to add adapter modules to specific layers of a pre-trained model. These modules usually consist of two small neural networks: one for dimensionality reduction and the other for augmentation.",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "The ReLU function is commonly used in deep learning neural networks. Which of the following is the value range of this function?",
+        "answerText": "[0,+∞)"
+    },
+    {
+        "type": "single",
+        "question": "If a 32 x 32 image is input and a 5 x 5 kernel is used for convolution with the stride of 1, the size of the output image is (    ).",
+        "answerText": "28 x 28"
+    },
+    {
+        "type": "single",
+        "question": "A manufacturer wants to produce virtual assistants for hospital use. For virtual assistants, which of the following technologies is used for voiceprint recognition?",
+        "answerText": "Speech recognition and processing"
+    },
+    {
+        "type": "single",
+        "question": "A computer uses labeled images to learn and distinguish between images of apples and those of pears. What is the name of this learning method?",
+        "answerText": "Supervised learning"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following are characteristics of eager execution in TensorFlow 2.x?",
+        "answerText": "Intuitiveness, Flexibility"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following fields can large model technologies be applied to?",
+        "answerText": "Autonomous driving, Robots, Translation, Finance"
+    },
+ {
+        "type": "single",
+        "question": "The tanh function can effectively solve the vanishing gradient problem.",
+        "answerText": "false"
+    },
+    {
+        "type": "single",
+        "question": "L1 regularization is referred to as weight decay.",
+        "answerText": "False"
+    },
+    {
+        "type": "single",
+        "question": "Assuming a dataset contains the areas and prices of 21,613 housing units in a city, you can use a classification model to predict the prices of other housing units in the city.",
+        "answerText": " False"
+    },
+    {
+        "type": "single",
+        "question": "In regression tasks, the most commonly used loss function is cross entropy cost.",
+        "answerText": " False"
+    },
+    {
+        "type": "single",
+        "question": "In data parallelism, the data of each training batch is split into N parts, forward propagation is performed across computing units, and the loss value calculated by each card is aggregated on the master node.",
+        "answerText": " False "
+    },
+    {
+        "type": "single",
+        "question": "In pipeline parallelism, the parameters of each layer of a model are split into multiple parts and distributed to multiple computing units. After the forward computation is complete, the gradients are combined on the master computing unit in the original splitting mode.",
+        "answerText": " False "
+    },
+    {
+        "type": "single",
+        "question": "Model fine-tuning is to adjust the model structure and the number of trainable parameters based on the pre-trained model, and to use more diverse data for training.",
+        "answerText": " False "
+    },    {
+        "type": "single",
+        "question": "Without considering any regularization terms, the support vectors of a support vector machine (SVM) are composed of (    ).",
+        "answerText": "The points closest to the separating hyperplane"
+    },
+    {
+        "type": "single",
+        "question": "During neural network training, which of the following values is continuously updated using the gradient descent method to minimize the loss function?",
+        "answerText": "Parameters"
+    },
+    {
+        "type": "single",
+        "question": "The sigmoid activation function is monotonic and continuous, has bounded outputs, and makes the network easy to converge. It was popular for a while, but when the network is deep, which one of these problems is sigmoid associated with?",
+        "answerText": "Vanishing gradient"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following functions can be used to alleviate the vanishing gradient problem?",
+        "answerText": "ReLU"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following is NOT a use case for natural language processing?",
+        "answerText": "Image recognition"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following is NOT a recurrent neural network?",
+        "answerText": "CNN"
+    },
+    {
+        "type": "single",
+        "question": "Within the broad landscape of large language models built on the Transformer architecture, which roadmap does GPT belong to?",
+        "answerText": "Decoder-Only"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following statements about different optimizers is false?",
+        "answerText": "Compared with RMSprop, Adagrad is more sensitive to gradient changes.."
+    },
+    {
+        "type": "single",
+        "question": "Which of the following statements is true about classification models and regression models in machine learning?",
+        "answerText": ".Overfitting may occur in both regression and classification problems.."
+    },
+    {
+        "type": "single",
+        "question": "Which of the following statements about support vector machines (SVMs) is false?",
+        "answerText": "SVMs only apply to linear classification."
+    },
+    {
+        "type": "single",
+        "question": "Which of the following is NOT an AI deep learning framework?",
+        "answerText": "Scikit-learn"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following are used in TensorFlow to describe the computation process?",
+        "answerText": "Data flow"
+    },
+    {
+        "type": "single",
+        "question": "If a 32 x 32 feature map is processed through a pooling layer with a stride of 2, the size of the output map is (    ).",
+        "answerText": ".16 x 16"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following is NOT a characteristic of PyTorch?",
+        "answerText": "Default use of static maps"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following is not an advanced AI application?",
+        "answerText": "SDN"
+    },
+    {
+        "type": "single",
+        "question": "Tensor parallelism is a common method for parallel training of large models. Which of the following types of model data is split to different devices?",
+        "answerText": "Model parameters"
+    },
 ];
 
     GM_addStyle(`
