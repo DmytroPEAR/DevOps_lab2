@@ -1367,7 +1367,7 @@
     {
         "type": "single",
         "question": "According to the material, what is the ICT talent conversion rate in Frontrunners?",
-        "answerText": "50%"
+        "answerText": "95%"
     },
     {
         "type": "single",
