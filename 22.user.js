@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         22
 // @namespace    http://tampermonkey.net/
-// @version      1.6
+// @version      1.7
 // @description  ---
 // @match        *://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/22.user.js
@@ -1797,6 +1797,46 @@
         "type": "multiple",
         "question": "Multiple choice：\n1. Which of the following methods belong to traversal methods for binary trees? (   )",
         "answerText": "pre-order, in-order, post-order"
+    },
+        {
+        "type": "single",
+        "question": "When designing a new server, you need to consider how to maximize the performance of a multi-core processor. Which of the following measures can help you achieve this goal?",
+        "answerText": "Using an OS that supports multi-core task scheduling, Binding Tasks to Specific Cores to Reduce Context Switching, Dynamically adjust task allocation to ensure balanced core load, Scheduling Multi-core Tasks Using Optimized State Machines"
+    },
+    {
+        "type": "single",
+        "question": "When developing an open source GCC-based application, which GCC-provided features do you need to consider to ensure that the program compiles and executes correctly?",
+        "answerText": "Compiler Options for GCC, Linker Options for GCC, Debugger Options for GCC, Optimizer Options for GCC"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following statements about openEuler are true?",
+        "answerText": "OpenEuler's innovation lies in supporting diverse devices and application scenarios., OpenEuler realizes ecosystem interoperability through interfaces with other OSs such as OpenHarmony., OpenEuler is designed to support all major computing architectures and become the best open source operating system for diverse computing capabilities., OpenEuler is mainly used in servers, cloud computing, edge computing, and data centers."
+    },
+    {
+        "type": "single",
+        "question": "Which of the following tools are designed for openEuler 22.03 LTS?",
+        "answerText": "x2openEuler, EulerLauncher, QuickIssue, CPDS"
+    },
+    {
+        "type": "single",
+        "question": "As a software development engineer, you are responsible for developing a Linux 5.10-based embedded system for a company. When considering Linux 5.10 for development, what do you need to look out for to ensure the stability and performance of your system?",
+        "answerText": "Use the latest Linux 5.10 kernel to ensure system security and stability., Building systems with Linux 5.10 hardware and software resource limitations in mind, Ensure applications run efficiently and reliably on Linux 5.10, Consider using OpenEuler for system development, taking advantage of its comprehensive Linux-based software platform."
+    },
+    {
+        "type": "single",
+        "question": "Which of the following statements are true about the multi-core scheduler of openEuler?",
+        "answerText": "Support for Coroutes in its kernel, allowing multiple tasks to be executed in a single thread, Distribute tasks across multiple CPU cores, maximizing hardware resource usage, improving user experience and performance, Dynamically adjust task allocation to ensure core load balancing and prevent performance bottlenecks."
+    },
+    {
+        "type": "single",
+        "question": "In an enterprise Linux environment, the network administrator needs to configure and manage the network. If an enterprise decides to use Network Manager for network management, which of the following are the functions provided by Network Manager?",
+        "answerText": "Automatically scans and displays available networks, Prompt user for credentials and automatically connect, Management network alias, IP address, route, and DNS, Provides detailed customization options beyond the network configuration."
+    },
+    {
+        "type": "single",
+        "question": "You are a technician who installs WordPress on your server. What steps do you need to pay attention to when creating databases and users?",
+        "answerText": "Use the `MariaDB>createdatabasewordpress;` command to create a database named `wordpress`, Create a user named `wordpress` using the `MariaDB>createuserwordpress;` command, Use'MariaDB> 'NTALLPRIVILESONwordpress.*TO'WordPress'@'localhost'->identifierby' 123456'; `Commands grant `wordpress` user permission, Run the `MariaDB>quit` command to exit the database."
     },
 ];
 
