@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         22
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  ---
 // @match        *://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/22.user.js
@@ -1767,6 +1767,36 @@
         "type": "single",
         "question": "What are the main types of machine learning? (   )",
         "answerText": "discovery learning, statistical learning, analytical learning, inductive learning"
+    },
+   {
+        "type": "single",
+        "question": "In a zero-sum game, both sides follow the minimax strategy. Which of the following is true about the minimax strategy? (  )",
+        "answerText": "The best choice based on the worst-case scenarios"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following options does the artificial neural networks simulate? (  )",
+        "answerText": "human brain"
+    },
+    {
+        "type": "single",
+        "question": "In MNIST handwritten character recognition experiment, which of the following MindSpore API can be used to load datasets? (  )",
+        "answerText": "dataset"
+    },
+    {
+        "type": "single",
+        "question": "Artificial intelligence application scenario - intelligent manufacturing has five processes. Which of the following option does not belong to the five processes? (  )",
+        "answerText": "assessment"
+    },
+    {
+        "type": "single",
+        "question": "As shown in the figure about heuristic search, in the cost function f(n)=g(n)+H(n), if h(n) is 0 for all possible n, what kind of search does heuristic search equal to? (  )",
+        "answerText": "breadth-first search"
+    },
+    {
+        "type": "multiple",
+        "question": "Multiple choice：\n1. Which of the following methods belong to traversal methods for binary trees? (   )",
+        "answerText": "pre-order, in-order, post-order"
     },
 ];
 
