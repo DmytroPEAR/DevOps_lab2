@@ -1838,6 +1838,11 @@
         "question": "You are a technician who installs WordPress on your server. What steps do you need to pay attention to when creating databases and users?",
         "answerText": "Use the `MariaDB>createdatabasewordpress;` command to create a database named `wordpress`, Create a user named `wordpress` using the `MariaDB>createuserwordpress;` command, Use'MariaDB> 'NTALLPRIVILESONwordpress.*TO'WordPress'@'localhost'->identifierby' 123456'; `Commands grant `wordpress` user permission, Run the `MariaDB>quit` command to exit the database."
     },
+        {
+        "type": "true_false",
+        "question": "（True or False）The mean does not reacted as much as the mean by outliers. This property is known as ‘robustness’.",
+        "answerText": "False"
+    },
 ];
 
     GM_addStyle(`
