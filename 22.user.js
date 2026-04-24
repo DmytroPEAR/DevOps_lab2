@@ -1858,6 +1858,26 @@
         "question": "（True or False）If two events A and B are not independent, we can get ????(????????)=????(????)????(????).",
         "answerText": "False"
     },
+    {
+        "type": "single",
+        "question": "The emergence of foundation models represents a shift from weak AI to general AI.",
+        "answerText": "False"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following statements is true about the training of large models?",
+        "answerText": "The pre-training of large models requires a large amount of high-quality data."
+    },
+    {
+        "type": "single",
+        "question": "Optimizers are often used to accelerate training of deep learning neural networks. Which of the following are deep learning optimizers?",
+        "answerText": "Momentum, Adagrad, RMSprop, Adam"
+    },
+    {
+        "type": "single",
+        "question": "The process of developing AI applications includes (    ).",
+        "answerText": "Data preprocessing, Modeling, Model training, Model deployment"
+    },
 ];
 
     GM_addStyle(`
