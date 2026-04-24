@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         22
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  ---
 // @match        *://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/22.user.js
@@ -1752,6 +1752,21 @@
         "type": "single",
         "question": "In the training process of MNIST handwritten character recognition experiment, loss value keeps decline. (   )",
         "answerText": " False "
+    },
+           {
+        "type": "single",
+        "question": "Which of the following options does the artificial neural networks simulate? (  )",
+        "answerText": "human brain"
+    },
+    {
+        "type": "single",
+        "question": "As shown in the figure, it is a zero-sum game, what is the equilibrium point of both sides by following the minimax strategy? (  )",
+        "answerText": "6"
+    },
+    {
+        "type": "single",
+        "question": "What are the main types of machine learning? (   )",
+        "answerText": "discovery learning, statistical learning, analytical learning, inductive learning"
     },
 ];
 
