@@ -1693,6 +1693,66 @@
         "question": "Tensor parallelism is a common method for parallel training of large models. Which of the following types of model data is split to different devices?",
         "answerText": "Model parameters"
     },
+           {
+        "type": "single",
+        "question": "As shown in the figure, it is a zero-sum game, what is the equilibrium point of both sides by following the minimax strategy? (  )",
+        "answerText": "6"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following is the basic process of AI application development? (  )",
+        "answerText": "objective determination->data preparation->model training->model evaluation->model deployment"
+    },
+    {
+        "type": "single",
+        "question": "Ture/False：\n1. In a zero-sum game, there could be two or more players. (   )",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "For zero-sum game, when there is a saddle point, the maximum value of the minimum value in each row is equal to the minimum value of the maximum value in each column.(   )",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "In the field of musical composition, AI composer AIVA&apos;s first classical album &quot;Genesis&quot; has passed the Turing test. (   )",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "Xiao Ming is a developer. He can install MindSpore on Huawei Atlas server or development board for learning. (   )",
+        "answerText": "True"
+    },
+    {
+        "type": "single",
+        "question": "Although each industry has its own unique challenges, these industries are gradually adopting solutions based on artificial intelligence technology. (   )",
+        "answerText": "True"
+    },
+           {
+        "type": "single",
+        "question": "In MNIST handwritten character recognition experiment, the optimizer is not used. (   )",
+        "answerText": "False"
+    },
+    {
+        "type": "single",
+        "question": "When doing game tree search, the α-β pruning method cuts the tree can be used without β pruning method.( ）",
+        "answerText": "False"
+    },
+    {
+        "type": "single",
+        "question": "In MNIST handwritten character recognition experiment, the nn API of MindSpore is used for data enhancement. (   )",
+        "answerText": " False "
+    },
+    {
+        "type": "single",
+        "question": "Both supervised learning and unsupervised learning belong to reinforcement learning. (   )",
+        "answerText": " False "
+    },
+    {
+        "type": "single",
+        "question": "In the training process of MNIST handwritten character recognition experiment, loss value keeps decline. (   )",
+        "answerText": " False "
+    },
 ];
 
     GM_addStyle(`
