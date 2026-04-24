@@ -1843,6 +1843,21 @@
         "question": "（True or False）The mean does not reacted as much as the mean by outliers. This property is known as ‘robustness’.",
         "answerText": "False"
     },
+        {
+        "type": "multiple",
+        "question": "(Multiple choice) Which of the following operations can be performed on a matrix?",
+        "answerText": "Addition, Inversion, Transposition, Subtraction"
+    },
+    {
+        "type": "true_false",
+        "question": "（True or False）The mean does not reacted as much as the mean by outliers. This property is known as ‘robustness’.",
+        "answerText": " False "
+    },
+    {
+        "type": "true_false",
+        "question": "（True or False）If two events A and B are not independent, we can get ????(????????)=????(????)????(????).",
+        "answerText": "False"
+    },
 ];
 
     GM_addStyle(`
