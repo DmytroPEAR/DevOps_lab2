@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         22
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  ---
 // @match        *://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/22.user.js
