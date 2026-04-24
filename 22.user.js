@@ -1878,6 +1878,21 @@
         "question": "The process of developing AI applications includes (    ).",
         "answerText": "Data preprocessing, Modeling, Model training, Model deployment"
     },
+    {
+        "type": "single",
+        "question": "Which of the following statements about some of the subfields of AI are true?",
+        "answerText": "Computer vision is a science that studies how to make computers \"see\" things., Speech processing is a general term for different speech processing methods and techniques, including the study of vocalization, the collection of statistics related to speech signals, speech recognition, speech synthesis, and speech perception., Natural language processing studies how to use computer technology to understand and use human language."
+    },
+    {
+        "type": "single",
+        "question": "Which of the following statements about data preprocessing are true?",
+        "answerText": "Data cleansing is a process of filling in missing values, as well as detecting and eliminating noise and exceptions., Data dimension reduction aims to simplify data attributes and avoid the curse of dimensionality., Data standardization aims to reduce noise data and improve model accuracy by standardizing data."
+    },
+    {
+        "type": "single",
+        "question": "Which of the following may be included in the training dataset of GPT-3?",
+        "answerText": "Common Crawl, Wikipedia, Books1"
+    },
 ];
 
     GM_addStyle(`
