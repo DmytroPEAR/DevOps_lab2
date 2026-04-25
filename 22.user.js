@@ -1893,6 +1893,21 @@
         "question": "Which of the following may be included in the training dataset of GPT-3?",
         "answerText": "Common Crawl, Wikipedia, Books1"
     },
+    {
+        "type": "single",
+        "question": "How many kinds of possible games are there in 3x3 tic tac toe (fill the whole chessboard and regardless of victory or defeat.)? (  )",
+        "answerText": "9!"
+    },
+    {
+        "type": "single",
+        "question": "Which of the following is not an AI development framework? (  )",
+        "answerText": "GitHub"
+    },
+    {
+        "type": "single",
+        "question": "Artificial intelligence application scenario - intelligent risk control, which of the following technology does not belong to the behavior modeling? (  )",
+        "answerText": "data acquisition"
+    },
 ];
 
     GM_addStyle(`
