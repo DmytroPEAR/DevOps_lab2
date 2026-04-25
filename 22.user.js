@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         22
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  ---
 // @match        *://talent.shixizhi.huawei.com/*
 // @downloadURL  https://raw.githubusercontent.com/DmytroPEAR/DevOps_lab2/main/22.user.js
@@ -1907,6 +1907,11 @@
         "type": "single",
         "question": "Artificial intelligence application scenario - intelligent risk control, which of the following technology does not belong to the behavior modeling? (  )",
         "answerText": "data acquisition"
+    },
+     {
+        "type": "single",
+        "question": "When a 3x3 tic-tac-toe is represented in the form of game tree, how many possibilities are there in the first layer of game tree?(  )",
+        "answerText": "3"
     },
 ];
 
